@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>イーハトーブトライアル 採点アプリ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f4f6f8; display: flex; justify-content: center; padding: 16px; }
+    .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h1 { font-size: 1.2rem; text-align: center; margin-bottom: 16px; color: #333; }
+    
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; color: #555; }
+    input[type="text"], select { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; }
+
+    /* アクションボタン群 */
+    .action-buttons { display: flex; gap: 4px; }
+    .btn-action-add { background: none; border: 1px solid #38a169; color: #38a169; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-action-manage { background: none; border: 1px solid #718096; color: #718096; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+
+    /* クラス選択用エリアのヘッダー */
+    .class-select-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+
+    /* 採点者固定エリア */
+    .evaluator-fixed-box {
+      background-color: #ebf8ff;
+      border: 1px solid #bee3f8;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .evaluator-info-text { font-size: 0.85rem; color: #2b6cb0; font-weight: bold; }
+    .btn-change-evaluator { background: none; border: 1px solid #3182ce; color: #3182ce; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+
+    /* 対象ライダー選択用エリア */
+    .rider-select-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+
+    .rider-quick-buttons {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .btn-quick-rider {
+      background-color: #edf2f7;
+      border: 1px solid #cbd5e0;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      cursor: pointer;
+      font-weight: bold;
+      color: #4a5568;
+    }
+    .btn-quick-rider.active {
+      background-color: #2b6cb0;
+      color: white;
+      border-color: #2b6cb0;
+    }
+
+    .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+    .btn-score { padding: 14px 0; font-size: 1.1rem; font-weight: bold; background-color: #e2e8f0; color: #1a202c; border: 2px solid #cbd5e0; border-radius: 8px; cursor: pointer; }
+    .btn-score.active { background-color: #3182ce; color: white; border-color: #2b6cb0; }
+    
+    .stop-button-container { margin-top: 12px; }
+    .btn-stop { width: 100%; padding: 16px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #e53e3e; border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(229, 62, 62, 0.3); cursor: pointer; }
+    .btn-stop.active { background-color: #9b2c2c; border: 3px solid #742a2a; }
+    
+    .submit-container { margin-top: 24px; }
+    .btn-submit { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; color: white; background-color: #3182ce; border: none; border-radius: 12px; cursor: pointer; }
+
+    /* 集計エリア */
+    .summary-container { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #cbd5e0; }
+    .summary-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; color: #2d3748; display: flex; justify-content: space-between; align-items: center; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .summary-table th { background-color: #edf2f7; color: #4a5568; padding: 8px 6px; text-align: left; font-size: 0.75rem; }
+    .summary-table td { padding: 8px 6px; border-top: 1px solid #edf2f7; color: #2d3748; }
+    .summary-score { font-weight: bold; color: #e53e3e; font-size: 0.95rem; }
+
+    /* 履歴エリア */
+    .history-container { margin-top: 20px; padding-top: 16px; border-top: 2px dashed #e2e8f0; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .history-title { font-weight: bold; font-size: 0.95rem; }
+    .btn-export { background-color: #38a169; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+    
+    .history-list { list-style: none; max-height: 200px; overflow-y: auto; }
+    .history-item { background: #f7fafc; padding: 10px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem; border: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
+    .history-detail { display: flex; flex-direction: column; }
+    .evaluator-tag { font-size: 0.75rem; color: #718096; }
+    .btn-delete { background: none; border: none; color: #e53e3e; font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <h1>イーハトーブ 採点入力</h1>
+
+    <!-- 1. クラス選択エリア（最上段） -->
+    <div class="form-group">
+      <div class="class-select-header">
+        <label for="class-select">🏆 クラス選択</label>
+        <div class="action-buttons">
+          <button class="btn-action-add" onclick="registerNewClass()">＋ 追加</button>
+          <button class="btn-action-manage" onclick="manageClasses()">⚙️ 管理</button>
+        </div>
+      </div>
+      <select id="class-select" onchange="onClassSelectChange()">
+        <option value="">-- クラスを選択 --</option>
+      </select>
+      <input type="text" id="class-manual" placeholder="手入力する場合はこちら" style="margin-top: 6px; display: none;">
+    </div>
+
+    <!-- 2. 採点者の固定表示エリア -->
+    <div class="evaluator-fixed-box">
+      <div class="evaluator-info-text" id="evaluator-display">👤 採点者: 未設定</div>
+      <button class="btn-change-evaluator" onclick="setEvaluator()">選択・変更</button>
+    </div>
+
+    <!-- 3. 対象ライダーの選択・管理エリア -->
+    <div class="form-group">
+      <div class="rider-select-header">
+        <label for="rider-select">🏍️ 対象Rider（タップで選択）</label>
+        <div class="action-buttons">
+          <button class="btn-action-add" onclick="registerNewRider()">＋ 追加</button>
+          <button class="btn-action-manage" onclick="manageRiders()">⚙️ 管理</button>
+        </div>
+      </div>
+
+      <!-- クイックボタンエリア -->
+      <div class="rider-quick-buttons" id="quick-rider-list"></div>
+
+      <!-- 選択ドロップダウン ＆ 手入力切り替え -->
+      <select id="rider-select" onchange="onRiderSelectChange()">
+        <option value="">-- ライダーを選択 --</option>
+      </select>
+      <input type="text" id="rider-manual" placeholder="手入力する場合はこちら" style="margin-top: 6px; display: none;">
+    </div>
+
+    <!-- 4. セクション選択（1 SEC 〜 20 SEC） -->
+    <div class="form-group">
+      <label for="section-select">📍 セクション選択</label>
+      <select id="section-select">
+        <option value="1">1 SEC</option>
+        <option value="2">2 SEC</option>
+        <option value="3">3 SEC</option>
+        <option value="4">4 SEC</option>
+        <option value="5">5 SEC</option>
+        <option value="6">6 SEC</option>
+        <option value="7">7 SEC</option>
+        <option value="8">8 SEC</option>
+        <option value="9">9 SEC</option>
+        <option value="10">10 SEC</option>
+        <option value="11">11 SEC</option>
+        <option value="12">12 SEC</option>
+        <option value="13">13 SEC</option>
+        <option value="14">14 SEC</option>
+        <option value="15">15 SEC</option>
+        <option value="16">16 SEC</option>
+        <option value="17">17 SEC</option>
+        <option value="18">18 SEC</option>
+        <option value="19">19 SEC</option>
+        <option value="20">20 SEC</option>
+      </select>
+    </div>
+
+    <!-- 5. 減点数選択エリア -->
+    <div class="form-group">
+      <label>📊 減点数選択</label>
+      <div class="score-buttons">
+        <button type="button" class="btn-score" onclick="selectScore(0, this)">0</button>
+        <button type="button" class="btn-score" onclick="selectScore(1, this)">1</button>
+        <button type="button" class="btn-score" onclick="selectScore(2, this)">2</button>
+        <button type="button" class="btn-score" onclick="selectScore(3, this)">3</button>
+        <button type="button" class="btn-score" onclick="selectScore(5, this)">5</button>
+      </div>
+
+      <div class="stop-button-container">
+        <button type="button" class="btn-stop" id="stop-btn" onclick="selectStop(this)">🛑 停止（即3点）</button>
+      </div>
+    </div>
+
+    <div class="submit-container">
+      <button type="button" class="btn-submit" onclick="saveScore()">採点を保存する</button>
+    </div>
+
+    <!-- 6. 合計点数（集計）エリア -->
+    <div class="summary-container">
+      <div class="summary-title">
+        <span>📈 ライダー別 合計減点</span>
+      </div>
+      <div id="summary-content"></div>
+    </div>
+
+    <!-- 7. 履歴エリア -->
+    <div class="history-container">
+      <div class="history-header">
+        <span class="history-title">📱 保存された記録</span>
+        <button class="btn-export" onclick="exportToCSV()">📥 CSV出力</button>
+      </div>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    let selectedScore = null;
+    let currentEvaluator = localStorage.getItem('fixed_evaluator') || '';
+    let selectedRiderName = '';
+    let selectedClassName = '';
+
+    // クラス初期データ
+    const defaultClasses = ['クラシック', 'ヒームカ', 'ネリ', 'ブドリ', 'トレールトライアル', 'ランド'];
+    const defaultRiders = ['107 なりたりょう', '108 よねくらさん', '109 ごとうさん', '110 かすみくん'];
+
+    // クラスリストの取得
+    function getClasses() {
+      const saved = localStorage.getItem('registered_classes');
+      if (!saved) {
+        localStorage.setItem('registered_classes', JSON.stringify(defaultClasses));
+        return defaultClasses;
+      }
+      try {
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          localStorage.setItem('registered_classes', JSON.stringify(defaultClasses));
+          return defaultClasses;
+        }
+        return parsed;
+      } catch (e) {
+        localStorage.setItem('registered_classes', JSON.stringify(defaultClasses));
+        return defaultClasses;
+      }
+    }
+
+    // ライダーリストの取得
+    function getGroupMembers() {
+      const saved = localStorage.getItem('registered_riders');
+      if (!saved) {
+        localStorage.setItem('registered_riders', JSON.stringify(defaultRiders));
+        return defaultRiders;
+      }
+      try {
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          localStorage.setItem('registered_riders', JSON.stringify(defaultRiders));
+          return defaultRiders;
+        }
+        return parsed;
+      } catch (e) {
+        localStorage.setItem('registered_riders', JSON.stringify(defaultRiders));
+        return defaultRiders;
+      }
+    }
+
+    // 採点者設定
+    function initEvaluator() {
+      if (!currentEvaluator) {
+        setEvaluator();
+      } else {
+        updateEvaluatorDisplay();
+      }
+    }
+
+    function setEvaluator() {
+      const members = getGroupMembers();
+      let message = 'スマホの持ち主（採点者）を選択・入力してください:\n\n';
+      members.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
+      message += '\n番号または直接名前を入力してください:';
+
+      const input = prompt(message, currentEvaluator);
+      if (input !== null && input.trim() !== '') {
+        const trimmed = input.trim();
+        const num = parseInt(trimmed, 10);
+        if (!isNaN(num) && num >= 1 && num <= members.length) {
+          currentEvaluator = members[num - 1];
+        } else {
+          currentEvaluator = trimmed;
+        }
+
+        localStorage.setItem('fixed_evaluator', currentEvaluator);
+        updateEvaluatorDisplay();
+      }
+    }
+
+    function updateEvaluatorDisplay() {
+      document.getElementById('evaluator-display').textContent = `👤 採点者: ${currentEvaluator}`;
+    }
+
+    // クラスUIの読み込み
+    function loadClasses() {
+      const classes = getClasses();
+      const selectElement = document.getElementById('class-select');
+      
+      selectElement.innerHTML = '<option value="">-- クラスを選択 --</option>' + 
+        classes.map(c => `<option value="${c}" ${c === selectedClassName ? 'selected' : ''}>${c}</option>`).join('') +
+        '<option value="__MANUAL__">＋ 手入力する</option>';
+    }
+
+    function onClassSelectChange() {
+      const val = document.getElementById('class-select').value;
+      const manualInput = document.getElementById('class-manual');
+      if (val === '__MANUAL__') {
+        selectedClassName = '';
+        manualInput.style.display = 'block';
+        manualInput.value = '';
+      } else {
+        manualInput.style.display = 'none';
+        selectedClassName = val;
+      }
+    }
+
+    function registerNewClass() {
+      const input = prompt('追加するクラス名を入力してください:');
+      if (input && input.trim()) {
+        let classes = getClasses();
+        const newClass = input.trim();
+        if (!classes.includes(newClass)) {
+          classes.push(newClass);
+          localStorage.setItem('registered_classes', JSON.stringify(classes));
+          selectedClassName = newClass;
+          loadClasses();
+          document.getElementById('class-select').value = newClass;
+        } else {
+          alert('そのクラスは既に登録されています。');
+        }
+      }
+    }
+
+    function manageClasses() {
+      let classes = getClasses();
+      let message = '削除したいクラスの番号を入力してください:\n\n';
+      classes.forEach((c, idx) => message += `${idx + 1}: ${c}\n`);
+
+      const input = prompt(message);
+      if (input !== null && input.trim() !== '') {
+        const num = parseInt(input.trim(), 10);
+        if (!isNaN(num) && num >= 1 && num <= classes.length) {
+          const removed = classes.splice(num - 1, 1);
+          localStorage.setItem('registered_classes', JSON.stringify(classes));
+          if (selectedClassName === removed[0]) selectedClassName = '';
+          loadClasses();
+          alert(`${removed[0]} クラスを削除しました。`);
+        } else {
+          alert('無効な番号です。');
+        }
+      }
+    }
+
+    // ライダーUIの読み込み
+    function loadRiders() {
+      const registered = getGroupMembers();
+      renderRiderUI(registered);
+    }
+
+    function renderRiderUI(riders) {
+      const quickContainer = document.getElementById('quick-rider-list');
+      const selectElement = document.getElementById('rider-select');
+
+      quickContainer.innerHTML = riders.map(r => `
+        <button class="btn-quick-rider ${r === selectedRiderName ? 'active' : ''}" onclick="pickQuickRider('${r}')">${r}</button>
+      `).join('');
+
+      selectElement.innerHTML = '<option value="">-- ライダーを選択 --</option>' + 
+        riders.map(r => `<option value="${r}" ${r === selectedRiderName ? 'selected' : ''}>${r}</option>`).join('') +
+        '<option value="__MANUAL__">＋ 手入力する</option>';
+    }
+
+    function pickQuickRider(name) {
+      selectedRiderName = name;
+      document.getElementById('rider-manual').style.display = 'none';
+      renderRiderUI(getGroupMembers());
+    }
+
+    function onRiderSelectChange() {
+      const val = document.getElementById('rider-select').value;
+      const manualInput = document.getElementById('rider-manual');
+      if (val === '__MANUAL__') {
+        selectedRiderName = '';
+        manualInput.style.display = 'block';
+        manualInput.value = '';
+      } else {
+        manualInput.style.display = 'none';
+        selectedRiderName = val;
+        renderRiderUI(getGroupMembers());
+      }
+    }
+
+    function registerNewRider() {
+      const input = prompt('追加するライダーの「ゼッケン＋お名前」を入力してください:\n(例: 111 さとうさん)');
+      if (input && input.trim()) {
+        let registered = getGroupMembers();
+        const newName = input.trim();
+        if (!registered.includes(newName)) {
+          registered.push(newName);
+          localStorage.setItem('registered_riders', JSON.stringify(registered));
+          pickQuickRider(newName);
+        } else {
+          alert('そのライダーは既に登録されています。');
+        }
+      }
+    }
+
+    function manageRiders() {
+      let registered = getGroupMembers();
+      let message = '削除したいライダーの番号を入力してください:\n\n';
+      registered.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
+
+      const input = prompt(message);
+      if (input !== null && input.trim() !== '') {
+        const num = parseInt(input.trim(), 10);
+        if (!isNaN(num) && num >= 1 && num <= registered.length) {
+          const removed = registered.splice(num - 1, 1);
+          localStorage.setItem('registered_riders', JSON.stringify(registered));
+          if (selectedRiderName === removed[0]) selectedRiderName = '';
+          loadRiders();
+          alert(`${removed[0]} を削除しました。`);
+        } else {
+          alert('無効な番号です。');
+        }
+      }
+    }
+
+    function selectScore(score, btn) {
+      clearSelection();
+      selectedScore = score;
+      btn.classList.add('active');
+    }
+
+    function selectStop(btn) {
+      clearSelection();
+      selectedScore = 3;
+      btn.classList.add('active');
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active'));
+      document.getElementById('stop-btn').classList.remove('active');
+    }
+
+    // 自動で次のセクションへ進む関数
+    function advanceNextSection() {
+      const sectionSelect = document.getElementById('section-select');
+      let currentVal = parseInt(sectionSelect.value, 10);
+      if (currentVal < 20) {
+        sectionSelect.value = (currentVal + 1).toString();
+      } else {
+        sectionSelect.value = "1"; // 20 SECの後は1 SECに戻る
+      }
+    }
+
+    function saveScore() {
+      const manualClassVal = document.getElementById('class-manual').value.trim();
+      const finalClass = manualClassVal || selectedClassName;
+      
+      const manualVal = document.getElementById('rider-manual').value.trim();
+      const finalRider = manualVal || selectedRiderName;
+      const sectionSelect = document.getElementById('section-select');
+      const sectionNum = sectionSelect.value;
+      const sectionLabel = `${sectionNum} SEC`;
+
+      if (!finalClass) {
+        alert('クラスを選択または入力してください！');
+        return;
+      }
+      if (!currentEvaluator) {
+        alert('採点者が設定されていません。');
+        setEvaluator();
+        return;
+      }
+      if (!finalRider) {
+        alert('対象のRiderを選択または入力してください！');
+        return;
+      }
+      if (selectedScore === null) {
+        alert('減点数または「停止」を選択してください！');
+        return;
+      }
+
+      let registered = getGroupMembers();
+      if (!registered.includes(finalRider)) {
+        registered.push(finalRider);
+        localStorage.setItem('registered_riders', JSON.stringify(registered));
+      }
+
+      const record = {
+        id: Date.now(),
+        evaluator: currentEvaluator,
+        class: finalClass,
+        rider: finalRider,
+        section: sectionLabel,
+        score: selectedScore,
+        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      history.unshift(record);
+      localStorage.setItem('trial_scores', JSON.stringify(history));
+
+      alert(`保存しました！\nクラス: ${finalClass}\n採点者: ${currentEvaluator}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
+
+      clearSelection();
+      selectedScore = null;
+      
+      // 自動で次のセクションへ進める
+      advanceNextSection();
+
+      renderRiderUI(registered);
+      renderSummary();
+      renderHistory();
+    }
+
+    function deleteRecord(id) {
+      if (confirm('この記録を削除してもよろしいですか？')) {
+        let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+        history = history.filter(item => item.id !== id);
+        localStorage.setItem('trial_scores', JSON.stringify(history));
+        renderSummary();
+        renderHistory();
+      }
+    }
+
+    function exportToCSV() {
+      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      if (history.length === 0) {
+        alert('出力するデータがありません。');
+        return;
+      }
+
+      let csvContent = "\uFEFF日時,クラス,セクション,対象ライダー,減点数,採点者\n";
+      history.forEach(item => {
+        csvContent += `"${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ihatov_scores_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // 集計表示の描画（ライダー別合計減点）
+    function renderSummary() {
+      const container = document.getElementById('summary-content');
+      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに合計が表示されます</p>';
+        return;
+      }
+
+      // ライダーごとに集計処理
+      const summaryMap = {};
+      history.forEach(item => {
+        const key = item.rider;
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            rider: item.rider,
+            class: item.class || '未設定',
+            totalScore: 0,
+            secCount: 0
+          };
+        }
+        summaryMap[key].totalScore += Number(item.score);
+        summaryMap[key].secCount += 1;
+      });
+
+      // 配列にして減点数が少ない順（優勢順）にソート
+      const summaryList = Object.values(summaryMap).sort((a, b) => a.totalScore - b.totalScore);
+
+      let tableHtml = `
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>ライダー</th>
+              <th>クラス</th>
+              <th>SEC数</th>
+              <th>合計減点</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      summaryList.forEach(s => {
+        tableHtml += `
+          <tr>
+            <td><b>${s.rider}</b></td>
+            <td>${s.class}</td>
+            <td>${s.secCount} SEC</td>
+            <td class="summary-score">${s.totalScore}点</td>
+          </tr>
+        `;
+      });
+
+      tableHtml += '</tbody></table>';
+      container.innerHTML = tableHtml;
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      
+      historyList.innerHTML = history.length === 0 
+        ? '<li style="color:#888; font-size:0.8rem;">まだ記録はありません</li>'
+        : history.map(item => `
+            <li class="history-item">
+              <div class="history-detail">
+                <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider}</span>
+                <span class="evaluator-tag">採点者: ${item.evaluator} (${item.time})</span>
+              </div>
+              <div>
+                <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
+                <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
+              </div>
+            </li>
+          `).join('');
+    }
+
+    loadClasses();
+    loadRiders();
+    initEvaluator();
+    renderSummary();
+    renderHistory();
+  </script>
+
+</body>
+</html>
