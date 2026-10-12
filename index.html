@@ -14,98 +14,94 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f4f6f8; display: flex; justify-content: center; padding: 16px; }
-    .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.3rem; text-align: center; margin-bottom: 12px; color: #1a202c; font-weight: 800; letter-spacing: 1px; }
+    body { background-color: #f8fafc; display: flex; justify-content: center; padding: 12px; }
+    .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    h1 { font-size: 1.2rem; text-align: center; margin-bottom: 12px; color: #1e293b; font-weight: 800; letter-spacing: 0.5px; }
 
     /* DAY切替タブ */
-    .day-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: #edf2f7; padding: 4px; border-radius: 10px; }
-    .btn-day { flex: 1; padding: 10px 0; border: none; background: none; font-size: 0.95rem; font-weight: bold; color: #4a5568; border-radius: 8px; cursor: pointer; }
-    .btn-day.active { background-color: #2b6cb0; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .day-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
+    .btn-day { flex: 1; padding: 8px 0; border: none; background: none; font-size: 0.9rem; font-weight: bold; color: #64748b; border-radius: 6px; cursor: pointer; }
+    .btn-day.active { background-color: #2563eb; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; color: #555; }
-    input[type="text"] { width: 100%; padding: 12px; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; background-color: #fff; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #475569; }
+    input[type="text"] { width: 100%; padding: 10px; font-size: 0.95rem; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; }
 
     /* アクションボタン群 */
     .action-buttons { display: flex; gap: 4px; }
-    .btn-action-add { background: none; border: 1px solid #38a169; color: #38a169; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-    .btn-action-manage { background: none; border: 1px solid #718096; color: #718096; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-action-add { background: none; border: 1px solid #16a34a; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+    .btn-action-manage { background: none; border: 1px solid #64748b; color: #64748b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
 
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 
     .scroll-buttons {
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding-bottom: 6px;
-      margin-bottom: 6px;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
       -webkit-overflow-scrolling: touch;
     }
     .btn-select-chip {
-      background-color: #edf2f7;
-      border: 1px solid #cbd5e0;
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 0.85rem;
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 0.8rem;
       white-space: nowrap;
       cursor: pointer;
       font-weight: bold;
-      color: #4a5568;
+      color: #334155;
       flex-shrink: 0;
     }
     .btn-select-chip.active {
-      background-color: #2b6cb0;
+      background-color: #2563eb;
       color: white;
-      border-color: #2b6cb0;
+      border-color: #2563eb;
     }
 
     .evaluator-fixed-box {
-      background-color: #ebf8ff;
-      border: 1px solid #bee3f8;
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin-bottom: 16px;
+      background-color: #eff6ff;
+      border: 1px solid #dbeafe;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .evaluator-info-text { font-size: 0.85rem; color: #2b6cb0; font-weight: bold; }
-    .btn-change-evaluator { background: none; border: 1px solid #3182ce; color: #3182ce; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
+    .evaluator-info-text { font-size: 0.8rem; color: #1d4ed8; font-weight: bold; }
+    .btn-change-evaluator { background: none; border: 1px solid #2563eb; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
 
-    .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
-    .btn-score { padding: 14px 0; font-size: 1.1rem; font-weight: bold; background-color: #e2e8f0; color: #1a202c; border: 2px solid #cbd5e0; border-radius: 8px; cursor: pointer; }
-    .btn-score.active { background-color: #3182ce; color: white; border-color: #2b6cb0; }
+    .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
+    .btn-score { padding: 14px 0; font-size: 1.2rem; font-weight: bold; background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; }
+    .btn-score.active { background-color: #2563eb; color: white; border-color: #2563eb; }
     
-    .stop-button-container { margin-top: 12px; }
-    .btn-stop { width: 100%; padding: 16px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #e53e3e; border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(229, 62, 62, 0.3); cursor: pointer; }
-    .btn-stop.active { background-color: #9b2c2c; border: 3px solid #742a2a; }
-    
-    .submit-container { margin-top: 24px; }
-    .btn-submit { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; color: white; background-color: #3182ce; border: none; border-radius: 12px; cursor: pointer; }
+    .submit-container { margin-top: 16px; }
+    .btn-submit { width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; color: white; background-color: #16a34a; border: none; border-radius: 8px; cursor: pointer; }
 
-    .summary-container { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #cbd5e0; }
-    .summary-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; color: #2d3748; }
-    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .summary-table th { background-color: #edf2f7; color: #4a5568; padding: 6px 4px; text-align: left; font-size: 0.7rem; }
-    .summary-table td { padding: 6px 4px; border-top: 1px solid #edf2f7; color: #2d3748; }
-    .summary-score-total { font-weight: bold; color: #e53e3e; font-size: 0.9rem; }
+    .summary-container { margin-top: 18px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .summary-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 6px; color: #334155; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .summary-table th { background-color: #f1f5f9; color: #475569; padding: 5px 4px; text-align: left; font-size: 0.7rem; }
+    .summary-table td { padding: 5px 4px; border-top: 1px solid #f1f5f9; color: #1e293b; }
+    .summary-score-total { font-weight: bold; color: #dc2626; font-size: 0.85rem; }
 
-    .history-container { margin-top: 20px; padding-top: 16px; border-top: 2px dashed #e2e8f0; }
-    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .history-title { font-weight: bold; font-size: 0.95rem; }
+    .history-container { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .history-title { font-weight: bold; font-size: 0.85rem; }
     .history-actions { display: flex; gap: 4px; }
-    .btn-sync { background-color: #3182ce; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-    .btn-export { background-color: #38a169; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-sync { background-color: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+    .btn-export { background-color: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
     
-    .history-list { list-style: none; max-height: 200px; overflow-y: auto; }
-    .history-item { background: #f7fafc; padding: 10px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem; border: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
+    .history-list { list-style: none; max-height: 160px; overflow-y: auto; }
+    .history-item { background: #f8fafc; padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; font-size: 0.8rem; border: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
     .history-detail { display: flex; flex-direction: column; }
-    .evaluator-tag { font-size: 0.75rem; color: #718096; }
-    .sync-badge { font-size: 0.7rem; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
-    .sync-badge.synced { background-color: #c6f6d5; color: #22543d; }
-    .sync-badge.unsynced { background-color: #feebc8; color: #744210; }
-    .btn-delete { background: none; border: none; color: #e53e3e; font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
+    .evaluator-tag { font-size: 0.7rem; color: #64748b; }
+    .sync-badge { font-size: 0.65rem; padding: 1px 3px; border-radius: 3px; font-weight: bold; margin-left: 4px; }
+    .sync-badge.synced { background-color: #dcfce7; color: #166534; }
+    .sync-badge.unsynced { background-color: #fef9c3; color: #854d0e; }
+    .btn-delete { background: none; border: none; color: #dc2626; font-size: 1rem; cursor: pointer; padding: 0 4px; }
   </style>
 </head>
 <body>
@@ -127,24 +123,24 @@
         </div>
       </div>
       <div class="scroll-buttons" id="class-button-list"></div>
-      <input type="text" id="class-manual" placeholder="クラスを手入力する場合はこちら" style="display: none; margin-top: 6px;">
+      <input type="text" id="class-manual" placeholder="クラスを手入力" style="display: none; margin-top: 4px;">
     </div>
 
     <div class="evaluator-fixed-box">
-      <div class="evaluator-info-text" id="evaluator-display">👤 採点担当者: 未設定</div>
-      <button class="btn-change-evaluator" onclick="setEvaluator()">変更する</button>
+      <div class="evaluator-info-text" id="evaluator-display">👤 担当: 未設定</div>
+      <button class="btn-change-evaluator" onclick="setEvaluator()">変更</button>
     </div>
 
     <div class="form-group">
       <div class="section-header">
-        <label>🏍️ 対象Rider（タップで選択）</label>
+        <label>🏍️ 対象Rider</label>
         <div class="action-buttons">
           <button class="btn-action-add" onclick="registerNewRider()">＋ 追加</button>
           <button class="btn-action-manage" onclick="manageRiders()">⚙️ 管理</button>
         </div>
       </div>
       <div class="scroll-buttons" id="quick-rider-list"></div>
-      <input type="text" id="rider-manual" placeholder="ライダーを手入力する場合はこちら" style="display: none; margin-top: 6px;">
+      <input type="text" id="rider-manual" placeholder="ライダーを手入力" style="display: none; margin-top: 4px;">
     </div>
 
     <div class="form-group">
@@ -161,10 +157,6 @@
         <button type="button" class="btn-score" onclick="selectScore(3, this)">3</button>
         <button type="button" class="btn-score" onclick="selectScore(5, this)">5</button>
       </div>
-
-      <div class="stop-button-container">
-        <button type="button" class="btn-stop" id="stop-btn" onclick="selectStop(this)">🛑 停止（即3点）</button>
-      </div>
     </div>
 
     <div class="submit-container">
@@ -172,7 +164,7 @@
     </div>
 
     <div class="summary-container">
-      <div class="summary-title">📈 2日間総合スタンディング (DAY1 + DAY2)</div>
+      <div class="summary-title">📈 2日間総合スタンディング</div>
       <div id="summary-content"></div>
     </div>
 
@@ -189,8 +181,7 @@
   </div>
 
   <script>
-    // 本部URL（固定埋め込み）
-    const HQ_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyBq8F2kRxMOmOr3hM66OEs5RKpzpKSrHWjdbKqI5DzX5izgHLJXdyYOjwtp4dJWCVJ_Q/exec";
+    const HQ_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbynZxtBLYcyis05tWjy4f4fuiVsR7dcf2wlbcCXZAmP8JGdsuFt9tbO9-vMgl4pAu7o6g/exec";
 
     let currentDay = localStorage.getItem('selected_day') || 'DAY1';
     let selectedScore = null;
@@ -235,7 +226,6 @@
       try { return JSON.parse(saved); } catch (e) { return defaultRiders; }
     }
 
-    // 初回起動時や未設定時に必ずゼッケンと名前を入力させる強制ポップアップ
     function initEvaluator() {
       if (!currentEvaluator) {
         setEvaluator();
@@ -300,7 +290,7 @@
     function manageClasses() {
       let classes = getClasses();
       let message = '削除したいクラスの番号を入力してください:\n\n';
-      classes.forEach((c, idx) => message += `${idx + 1}: ${c}\n`);
+      classes.forEach((c, idx) => message += `${idx + 1}:${c}\n`);
       const input = prompt(message);
       if (input !== null && input.trim() !== '') {
         const num = parseInt(input.trim(), 10);
@@ -392,7 +382,7 @@
     function manageRiders() {
       let registered = getGroupMembers();
       let message = '削除したいライダーの番号を入力してください:\n\n';
-      registered.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
+      registered.forEach((m, idx) => message += `${idx + 1}:${m}\n`);
       const input = prompt(message);
       if (input !== null && input.trim() !== '') {
         const num = parseInt(input.trim(), 10);
@@ -412,15 +402,8 @@
       btn.classList.add('active');
     }
 
-    function selectStop(btn) {
-      clearSelection();
-      selectedScore = 3;
-      btn.classList.add('active');
-    }
-
     function clearSelection() {
       document.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active'));
-      document.getElementById('stop-btn').classList.remove('active');
     }
 
     function saveScore() {
@@ -433,218 +416,8 @@
       if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
       if (selectedScore === null) { alert('減点数を選択してください！'); return; }
 
-      // ▼ スマホ内での重複チェック（同じ日・同じライダー・同じセクションがすでに保存されていないか確認）
       let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       const isDuplicate = history.some(item => item.day === currentDay && item.rider === finalRider && item.section === sectionLabel);
       
       if (isDuplicate) {
-        const overwrite = confirm(`⚠️ 【警告】\n「${finalRider}」の「${sectionLabel} (${currentDay})」は、すでにこの端末に記録されています。\n\n重複して登録しますか？（キャンセルすると修正できます）`);
-        if (!overwrite) return;
-      }
-
-      let registered = getGroupMembers();
-      if (!registered.includes(finalRider) && finalRider !== '__MANUAL__') {
-        registered.push(finalRider);
-        localStorage.setItem('registered_riders', JSON.stringify(registered));
-      }
-
-      const record = {
-        id: Date.now(),
-        day: currentDay,
-        evaluator: currentEvaluator,
-        class: finalClass,
-        rider: finalRider,
-        section: sectionLabel,
-        score: selectedScore,
-        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-        synced: false
-      };
-
-      history.unshift(record);
-      localStorage.setItem('trial_scores_v2', JSON.stringify(history));
-
-      alert(`保存しました！ [${currentDay}]\nクラス: ${finalClass}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
-
-      clearSelection();
-      selectedScore = null;
-      
-      updateRiderNextSection(finalRider, currentDay, selectedSectionNum);
-      syncSectionForRider(finalRider);
-
-      renderRiderUI();
-      renderSummary();
-      renderHistory();
-    }
-
-    function deleteRecord(id) {
-      if (confirm('この記録を削除しますか？')) {
-        let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
-        renderSummary();
-        renderHistory();
-      }
-    }
-
-    async function syncToHQ() {
-      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-      const unsynced = history.filter(item => !item.synced);
-
-      if (unsynced.length === 0) {
-        alert('現在、本部へ送信待ちの新しい記録はありません。');
-        return;
-      }
-
-      if (!navigator.onLine) {
-        alert('現在オフライン状態です。電波の良い場所で再度ボタンを押してください。');
-        return;
-      }
-
-      try {
-        alert(`${unsynced.length}件の記録を本部に送信しています...`);
-        
-        await fetch(HQ_WEBHOOK_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsynced)
-        });
-
-        history = history.map(item => {
-          item.synced = true;
-          return item;
-        });
-        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
-
-        renderHistory();
-        alert('本部への送信が完了しました！スプレッドシートを確認してください。');
-      } catch (error) {
-        alert('送信に失敗しました。電波状況を確認して再度お試しください。\nエラー: ' + error.message);
-      }
-    }
-
-    function exportToCSV() {
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-      if (history.length === 0) { alert('出力するデータがありません。'); return; }
-
-      let csvContent = "\uFEFFDAY,日時,クラス,セクション,対象ライダー,減点数,採点者\n";
-      history.forEach(item => {
-        csvContent += `"${item.day}","${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `ihatov_scores_all_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function renderSummary() {
-      const container = document.getElementById('summary-content');
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-
-      if (history.length === 0) {
-        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに総合順位が表示されます</p>';
-        return;
-      }
-
-      const summaryMap = {};
-      history.forEach(item => {
-        const key = item.rider;
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            rider: item.rider,
-            class: item.class || '未設定',
-            day1: 0,
-            day2: 0
-          };
-        }
-        if (item.day === 'DAY1') summaryMap[key].day1 += Number(item.score);
-        if (item.day === 'DAY2') summaryMap[key].day2 += Number(item.score);
-      });
-
-      const summaryList = Object.values(summaryMap).map(s => ({
-        ...s,
-        total: s.day1 + s.day2
-      })).sort((a, b) => a.total - b.total);
-
-      let tableHtml = `
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>ライダー</th>
-              <th>クラス</th>
-              <th>DAY1</th>
-              <th>DAY2</th>
-              <th>合計</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      summaryList.forEach(s => {
-        tableHtml += `
-          <tr>
-            <td><b>${s.rider}</b></td>
-            <td>${s.class}</td>
-            <td>${s.day1}点</td>
-            <td>${s.day2}点</td>
-            <td class="summary-score-total">${s.total}点</td>
-          </tr>
-        `;
-      });
-
-      tableHtml += '</tbody></table>';
-      container.innerHTML = tableHtml;
-    }
-
-    function renderHistory() {
-      const historyList = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-      const filtered = history.filter(item => item.day === currentDay);
-      
-      historyList.innerHTML = filtered.length === 0 
-        ? `<li style="color:#888; font-size:0.8rem;">${currentDay}の記録はまだありません</li>`
-        : filtered.map(item => {
-            const syncTag = item.synced 
-              ? '<span class="sync-badge synced">送信済</span>' 
-              : '<span class="sync-badge unsynced">未送信</span>';
-            return `
-              <li class="history-item">
-                <div class="history-detail">
-                  <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
-                  <span class="evaluator-tag">${item.day} / 担当: ${item.evaluator} (${item.time})</span>
-                </div>
-                <div>
-                  <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
-                  <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
-                </div>
-              </li>
-            `;
-          }).join('');
-    }
-
-    initDayUI();
-    renderClassUI();
-    renderRiderUI();
-    renderSectionUI();
-    initEvaluator();
-    renderSummary();
-    renderHistory();
-  </script>
-
-  <!-- ▼ サービスワーカー登録（オフライン対応用） -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registered!', reg))
-          .catch(err => console.log('Service Worker error: ', err));
-      });
-    }
-  </script>
-</body>
-</html>
+        const overwrite = confirm(`⚠️ 【警告】\n
