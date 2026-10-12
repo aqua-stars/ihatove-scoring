@@ -8,7 +8,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f4f6f8; display: flex; justify-content: center; padding: 16px; }
     .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.3rem; text-align: center; margin-bottom: 16px; color: #1a202c; font-weight: 800; letter-spacing: 1px; }
+    h1 { font-size: 1.3rem; text-align: center; margin-bottom: 12px; color: #1a202c; font-weight: 800; letter-spacing: 1px; }
+
+    /* DAY切替タブ */
+    .day-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: #edf2f7; padding: 4px; border-radius: 10px; }
+    .btn-day { flex: 1; padding: 10px 0; border: none; background: none; font-size: 0.95rem; font-weight: bold; color: #4a5568; border-radius: 8px; cursor: pointer; }
+    .btn-day.active { background-color: #2b6cb0; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; color: #555; }
@@ -77,11 +82,11 @@
 
     /* 集計エリア */
     .summary-container { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #cbd5e0; }
-    .summary-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; color: #2d3748; display: flex; justify-content: space-between; align-items: center; }
-    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .summary-table th { background-color: #edf2f7; color: #4a5568; padding: 8px 6px; text-align: left; font-size: 0.75rem; }
-    .summary-table td { padding: 8px 6px; border-top: 1px solid #edf2f7; color: #2d3748; }
-    .summary-score { font-weight: bold; color: #e53e3e; font-size: 0.95rem; }
+    .summary-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; color: #2d3748; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .summary-table th { background-color: #edf2f7; color: #4a5568; padding: 6px 4px; text-align: left; font-size: 0.7rem; }
+    .summary-table td { padding: 6px 4px; border-top: 1px solid #edf2f7; color: #2d3748; }
+    .summary-score-total { font-weight: bold; color: #e53e3e; font-size: 0.9rem; }
 
     /* 履歴エリア */
     .history-container { margin-top: 20px; padding-top: 16px; border-top: 2px dashed #e2e8f0; }
@@ -100,6 +105,12 @@
 
   <div class="app-container">
     <h1>IHATOVE SCORING</h1>
+
+    <!-- 競技日（DAY）切替タブ -->
+    <div class="day-tabs">
+      <button class="btn-day" id="btn-day1" onclick="switchDay('DAY1')">DAY 1</button>
+      <button class="btn-day" id="btn-day2" onclick="switchDay('DAY2')">DAY 2</button>
+    </div>
 
     <!-- 1. クラス選択エリア -->
     <div class="form-group">
@@ -159,11 +170,9 @@
       <button type="button" class="btn-submit" onclick="saveScore()">採点を保存する</button>
     </div>
 
-    <!-- 6. 合計点数（集計）エリア -->
+    <!-- 6. 総合点数（集計）エリア -->
     <div class="summary-container">
-      <div class="summary-title">
-        <span>📈 ライダー別 合計減点</span>
-      </div>
+      <div class="summary-title">📈 2日間総合スタンディング (DAY1 + DAY2)</div>
       <div id="summary-content"></div>
     </div>
 
@@ -178,15 +187,30 @@
   </div>
 
   <script>
+    let currentDay = localStorage.getItem('selected_day') || 'DAY1';
     let selectedScore = null;
     let currentEvaluator = localStorage.getItem('fixed_evaluator') || '';
     let selectedRiderName = '';
     let selectedClassName = '';
     let selectedSectionNum = 1;
 
-    // 初期データ
     const defaultClasses = ['クラシック', 'ヒームカ', 'ネリ', 'ブドリ', 'トレールトライアル', 'ランド'];
     const defaultRiders = ['107 なりたりょう', '108 よねくらさん', '109 ごとうさん', '110 かすみくん'];
+
+    function initDayUI() {
+      document.getElementById('btn-day1').classList.toggle('active', currentDay === 'DAY1');
+      document.getElementById('btn-day2').classList.toggle('active', currentDay === 'DAY2');
+    }
+
+    function switchDay(day) {
+      currentDay = day;
+      localStorage.setItem('selected_day', day);
+      initDayUI();
+      if (selectedRiderName && selectedRiderName !== '__MANUAL__') {
+        syncSectionForRider(selectedRiderName);
+      }
+      renderHistory();
+    }
 
     function getClasses() {
       const saved = localStorage.getItem('registered_classes');
@@ -194,11 +218,7 @@
         localStorage.setItem('registered_classes', JSON.stringify(defaultClasses));
         return defaultClasses;
       }
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return defaultClasses;
-      }
+      try { return JSON.parse(saved); } catch (e) { return defaultClasses; }
     }
 
     function getGroupMembers() {
@@ -207,14 +227,9 @@
         localStorage.setItem('registered_riders', JSON.stringify(defaultRiders));
         return defaultRiders;
       }
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return defaultRiders;
-      }
+      try { return JSON.parse(saved); } catch (e) { return defaultRiders; }
     }
 
-    // 採点者設定
     function initEvaluator() {
       if (!currentEvaluator) {
         setEvaluator();
@@ -238,7 +253,6 @@
         } else {
           currentEvaluator = trimmed;
         }
-
         localStorage.setItem('fixed_evaluator', currentEvaluator);
         updateEvaluatorDisplay();
       }
@@ -248,15 +262,12 @@
       document.getElementById('evaluator-display').textContent = `👤 採点者: ${currentEvaluator}`;
     }
 
-    // クラス描画
     function renderClassUI() {
       const classes = getClasses();
       const container = document.getElementById('class-button-list');
-      
       let html = classes.map(c => `
         <button class="btn-select-chip ${c === selectedClassName ? 'active' : ''}" onclick="selectClass('${c}')">${c}</button>
       `).join('');
-
       html += `<button class="btn-select-chip ${selectedClassName === '__MANUAL__' ? 'active' : ''}" onclick="selectClass('__MANUAL__')">＋ 手入力</button>`;
       container.innerHTML = html;
     }
@@ -293,7 +304,6 @@
       let classes = getClasses();
       let message = '削除したいクラスの番号を入力してください:\n\n';
       classes.forEach((c, idx) => message += `${idx + 1}: ${c}\n`);
-
       const input = prompt(message);
       if (input !== null && input.trim() !== '') {
         const num = parseInt(input.trim(), 10);
@@ -303,13 +313,10 @@
           if (selectedClassName === removed[0]) selectedClassName = '';
           renderClassUI();
           alert(`${removed[0]} クラスを削除しました。`);
-        } else {
-          alert('無効な番号です。');
         }
       }
     }
 
-    // セクション選択ボタン描画
     function renderSectionUI() {
       const container = document.getElementById('section-button-list');
       let html = '';
@@ -324,37 +331,34 @@
       renderSectionUI();
     }
 
-    // ライダーごとの次回セクション番号
-    function getRiderNextSection(riderName) {
+    function getRiderNextSection(riderName, day) {
       if (!riderName) return 1;
-      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections') || '{}');
-      return riderSections[riderName] || 1;
+      const key = `${day}_${riderName}`;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections_v2') || '{}');
+      return riderSections[key] || 1;
     }
 
-    function updateRiderNextSection(riderName, currentSec) {
+    function updateRiderNextSection(riderName, day, currentSec) {
       if (!riderName) return;
-      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections') || '{}');
+      const key = `${day}_${riderName}`;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections_v2') || '{}');
       let nextSec = currentSec + 1;
       if (nextSec > 20) nextSec = 1;
-      riderSections[riderName] = nextSec;
-      localStorage.setItem('rider_next_sections', JSON.stringify(riderSections));
-      return nextSec;
+      riderSections[key] = nextSec;
+      localStorage.setItem('rider_next_sections_v2', JSON.stringify(riderSections));
     }
 
     function syncSectionForRider(riderName) {
-      selectedSectionNum = getRiderNextSection(riderName);
+      selectedSectionNum = getRiderNextSection(riderName, currentDay);
       renderSectionUI();
     }
 
-    // ライダー描画
     function renderRiderUI() {
       const registered = getGroupMembers();
       const container = document.getElementById('quick-rider-list');
-
       let html = registered.map(r => `
         <button class="btn-select-chip ${r === selectedRiderName ? 'active' : ''}" onclick="pickRider('${r}')">${r}</button>
       `).join('');
-
       html += `<button class="btn-select-chip ${selectedRiderName === '__MANUAL__' ? 'active' : ''}" onclick="pickRider('__MANUAL__')">＋ 手入力</button>`;
       container.innerHTML = html;
     }
@@ -392,7 +396,6 @@
       let registered = getGroupMembers();
       let message = '削除したいライダーの番号を入力してください:\n\n';
       registered.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
-
       const input = prompt(message);
       if (input !== null && input.trim() !== '') {
         const num = parseInt(input.trim(), 10);
@@ -402,8 +405,6 @@
           if (selectedRiderName === removed[0]) selectedRiderName = '';
           renderRiderUI();
           alert(`${removed[0]} を削除しました。`);
-        } else {
-          alert('無効な番号です。');
         }
       }
     }
@@ -426,35 +427,14 @@
     }
 
     function saveScore() {
-      let finalClass = selectedClassName;
-      if (selectedClassName === '__MANUAL__') {
-        finalClass = document.getElementById('class-manual').value.trim();
-      }
-
-      let finalRider = selectedRiderName;
-      if (selectedRiderName === '__MANUAL__') {
-        finalRider = document.getElementById('rider-manual').value.trim();
-      }
-
+      let finalClass = selectedClassName === '__MANUAL__' ? document.getElementById('class-manual').value.trim() : selectedClassName;
+      let finalRider = selectedRiderName === '__MANUAL__' ? document.getElementById('rider-manual').value.trim() : selectedRiderName;
       const sectionLabel = `${selectedSectionNum} SEC`;
 
-      if (!finalClass) {
-        alert('クラスを選択または入力してください！');
-        return;
-      }
-      if (!currentEvaluator) {
-        alert('採点者が設定されていません。');
-        setEvaluator();
-        return;
-      }
-      if (!finalRider) {
-        alert('対象のRiderを選択または入力してください！');
-        return;
-      }
-      if (selectedScore === null) {
-        alert('減点数または「停止」を選択してください！');
-        return;
-      }
+      if (!finalClass) { alert('クラスを選択してください！'); return; }
+      if (!currentEvaluator) { alert('採点者が設定されていません。'); setEvaluator(); return; }
+      if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
+      if (selectedScore === null) { alert('減点数を選択してください！'); return; }
 
       let registered = getGroupMembers();
       if (!registered.includes(finalRider) && finalRider !== '__MANUAL__') {
@@ -464,6 +444,7 @@
 
       const record = {
         id: Date.now(),
+        day: currentDay,
         evaluator: currentEvaluator,
         class: finalClass,
         rider: finalRider,
@@ -472,16 +453,16 @@
         time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
       };
 
-      let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       history.unshift(record);
-      localStorage.setItem('trial_scores', JSON.stringify(history));
+      localStorage.setItem('trial_scores_v2', JSON.stringify(history));
 
-      alert(`保存しました！\nクラス: ${finalClass}\n採点者: ${currentEvaluator}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
+      alert(`保存しました！ [${currentDay}]\nクラス: ${finalClass}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
 
       clearSelection();
       selectedScore = null;
       
-      updateRiderNextSection(finalRider, selectedSectionNum);
+      updateRiderNextSection(finalRider, currentDay, selectedSectionNum);
       syncSectionForRider(finalRider);
 
       renderRiderUI();
@@ -490,32 +471,29 @@
     }
 
     function deleteRecord(id) {
-      if (confirm('この記録を削除してもよろしいですか？')) {
-        let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      if (confirm('この記録を削除しますか？')) {
+        let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
         history = history.filter(item => item.id !== id);
-        localStorage.setItem('trial_scores', JSON.stringify(history));
+        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
         renderSummary();
         renderHistory();
       }
     }
 
     function exportToCSV() {
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-      if (history.length === 0) {
-        alert('出力するデータがありません。');
-        return;
-      }
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      if (history.length === 0) { alert('出力するデータがありません。'); return; }
 
-      let csvContent = "\uFEFF日時,クラス,セクション,対象ライダー,減点数,採点者\n";
+      let csvContent = "\uFEFFDAY,日時,クラス,セクション,対象ライダー,減点数,採点者\n";
       history.forEach(item => {
-        csvContent += `"${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
+        csvContent += `"${item.day}","${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
       });
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `ihatov_scores_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `ihatov_scores_all_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -523,10 +501,10 @@
 
     function renderSummary() {
       const container = document.getElementById('summary-content');
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
 
       if (history.length === 0) {
-        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに合計が表示されます</p>';
+        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに総合順位が表示されます</p>';
         return;
       }
 
@@ -537,15 +515,18 @@
           summaryMap[key] = {
             rider: item.rider,
             class: item.class || '未設定',
-            totalScore: 0,
-            secCount: 0
+            day1: 0,
+            day2: 0
           };
         }
-        summaryMap[key].totalScore += Number(item.score);
-        summaryMap[key].secCount += 1;
+        if (item.day === 'DAY1') summaryMap[key].day1 += Number(item.score);
+        if (item.day === 'DAY2') summaryMap[key].day2 += Number(item.score);
       });
 
-      const summaryList = Object.values(summaryMap).sort((a, b) => a.totalScore - b.totalScore);
+      const summaryList = Object.values(summaryMap).map(s => ({
+        ...s,
+        total: s.day1 + s.day2
+      })).sort((a, b) => a.total - b.total);
 
       let tableHtml = `
         <table class="summary-table">
@@ -553,8 +534,9 @@
             <tr>
               <th>ライダー</th>
               <th>クラス</th>
-              <th>SEC数</th>
-              <th>合計減点</th>
+              <th>DAY1</th>
+              <th>DAY2</th>
+              <th>合計</th>
             </tr>
           </thead>
           <tbody>
@@ -565,8 +547,9 @@
           <tr>
             <td><b>${s.rider}</b></td>
             <td>${s.class}</td>
-            <td>${s.secCount} SEC</td>
-            <td class="summary-score">${s.totalScore}点</td>
+            <td>${s.day1}点</td>
+            <td>${s.day2}点</td>
+            <td class="summary-score-total">${s.total}点</td>
           </tr>
         `;
       });
@@ -577,15 +560,16 @@
 
     function renderHistory() {
       const historyList = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const filtered = history.filter(item => item.day === currentDay);
       
-      historyList.innerHTML = history.length === 0 
-        ? '<li style="color:#888; font-size:0.8rem;">まだ記録はありません</li>'
-        : history.map(item => `
+      historyList.innerHTML = filtered.length === 0 
+        ? `<li style="color:#888; font-size:0.8rem;">${currentDay}の記録はまだありません</li>`
+        : filtered.map(item => `
             <li class="history-item">
               <div class="history-detail">
                 <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider}</span>
-                <span class="evaluator-tag">採点者: ${item.evaluator} (${item.time})</span>
+                <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
               </div>
               <div>
                 <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
@@ -595,6 +579,7 @@
           `).join('');
     }
 
+    initDayUI();
     renderClassUI();
     renderRiderUI();
     renderSectionUI();
