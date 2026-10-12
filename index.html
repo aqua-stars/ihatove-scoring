@@ -331,4 +331,320 @@
       container.innerHTML = html;
     }
 
-    function selectSection(
+    function selectSection(num) {
+      selectedSectionNum = num;
+      renderSectionUI();
+    }
+
+    function getRiderNextSection(riderName, day) {
+      if (!riderName) return 1;
+      const key = `${day}_${riderName}`;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections_v2') || '{}');
+      return riderSections[key] || 1;
+    }
+
+    function updateRiderNextSection(riderName, day, currentSec) {
+      if (!riderName) return;
+      const key = `${day}_${riderName}`;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections_v2') || '{}');
+      let nextSec = currentSec + 1;
+      if (nextSec > 20) nextSec = 1;
+      riderSections[key] = nextSec;
+      localStorage.setItem('rider_next_sections_v2', JSON.stringify(riderSections));
+    }
+
+    function syncSectionForRider(riderName) {
+      selectedSectionNum = getRiderNextSection(riderName, currentDay);
+      renderSectionUI();
+    }
+
+    function renderRiderUI() {
+      const registered = getGroupMembers();
+      const container = document.getElementById('quick-rider-list');
+      let html = registered.map(r => `
+        <button class="btn-select-chip ${r === selectedRiderName ? 'active' : ''}" onclick="pickRider('${r}')">${r}</button>
+      `).join('');
+      html += `<button class="btn-select-chip ${selectedRiderName === '__MANUAL__' ? 'active' : ''}" onclick="pickRider('__MANUAL__')">＋ 手入力</button>`;
+      container.innerHTML = html;
+    }
+
+    function pickRider(name) {
+      const manualInput = document.getElementById('rider-manual');
+      if (name === '__MANUAL__') {
+        selectedRiderName = '__MANUAL__';
+        manualInput.style.display = 'block';
+        manualInput.value = '';
+      } else {
+        selectedRiderName = name;
+        manualInput.style.display = 'none';
+        syncSectionForRider(name);
+      }
+      renderRiderUI();
+    }
+
+    function registerNewRider() {
+      const input = prompt('追加するライダーの「ゼッケン＋お名前」を入力してください:\n(例: 111 さとうさん)');
+      if (input && input.trim()) {
+        let registered = getGroupMembers();
+        const newName = input.trim();
+        if (!registered.includes(newName)) {
+          registered.push(newName);
+          localStorage.setItem('registered_riders', JSON.stringify(registered));
+          pickRider(newName);
+        } else {
+          alert('そのライダーは既に登録されています。');
+        }
+      }
+    }
+
+    function manageRiders() {
+      let registered = getGroupMembers();
+      let message = '削除したいライダーの番号を入力してください:\n\n';
+      registered.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
+      const input = prompt(message);
+      if (input !== null && input.trim() !== '') {
+        const num = parseInt(input.trim(), 10);
+        if (!isNaN(num) && num >= 1 && num <= registered.length) {
+          const removed = registered.splice(num - 1, 1);
+          localStorage.setItem('registered_riders', JSON.stringify(registered));
+          if (selectedRiderName === removed[0]) selectedRiderName = '';
+          renderRiderUI();
+          alert(`${removed[0]} を削除しました。`);
+        }
+      }
+    }
+
+    function selectScore(score, btn) {
+      clearSelection();
+      selectedScore = score;
+      btn.classList.add('active');
+    }
+
+    function selectStop(btn) {
+      clearSelection();
+      selectedScore = 3;
+      btn.classList.add('active');
+    }
+
+    function clearSelection() {
+      document.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active'));
+      document.getElementById('stop-btn').classList.remove('active');
+    }
+
+    function saveScore() {
+      let finalClass = selectedClassName === '__MANUAL__' ? document.getElementById('class-manual').value.trim() : selectedClassName;
+      let finalRider = selectedRiderName === '__MANUAL__' ? document.getElementById('rider-manual').value.trim() : selectedRiderName;
+      const sectionLabel = `${selectedSectionNum} SEC`;
+
+      if (!finalClass) { alert('クラスを選択してください！'); return; }
+      if (!currentEvaluator) { alert('採点者が設定されていません。'); setEvaluator(); return; }
+      if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
+      if (selectedScore === null) { alert('減点数を選択してください！'); return; }
+
+      let registered = getGroupMembers();
+      if (!registered.includes(finalRider) && finalRider !== '__MANUAL__') {
+        registered.push(finalRider);
+        localStorage.setItem('registered_riders', JSON.stringify(registered));
+      }
+
+      const record = {
+        id: Date.now(),
+        day: currentDay,
+        evaluator: currentEvaluator,
+        class: finalClass,
+        rider: finalRider,
+        section: sectionLabel,
+        score: selectedScore,
+        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+        synced: false
+      };
+
+      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      history.unshift(record);
+      localStorage.setItem('trial_scores_v2', JSON.stringify(history));
+
+      alert(`保存しました！ [${currentDay}]\nクラス: ${finalClass}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
+
+      clearSelection();
+      selectedScore = null;
+      
+      updateRiderNextSection(finalRider, currentDay, selectedSectionNum);
+      syncSectionForRider(finalRider);
+
+      renderRiderUI();
+      renderSummary();
+      renderHistory();
+    }
+
+    function deleteRecord(id) {
+      if (confirm('この記録を削除しますか？')) {
+        let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+        history = history.filter(item => item.id !== id);
+        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
+        renderSummary();
+        renderHistory();
+      }
+    }
+
+    async function syncToHQ() {
+      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const unsynced = history.filter(item => !item.synced);
+
+      if (unsynced.length === 0) {
+        alert('現在、本部へ送信待ちの新しい記録はありません。');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        alert('現在オフライン状態です。電波の良い場所で再度ボタンを押してください。');
+        return;
+      }
+
+      try {
+        alert(`${unsynced.length}件の記録を本부에送信しています...`);
+        
+        await fetch(HQ_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(unsynced)
+        });
+
+        history = history.map(item => {
+          item.synced = true;
+          return item;
+        });
+        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
+
+        renderHistory();
+        alert('本部への送信が完了しました！スプレッドシートを確認してください。');
+      } catch (error) {
+        alert('送信に失敗しました。電波状況を確認して再度お試しください。\nエラー: ' + error.message);
+      }
+    }
+
+    function exportToCSV() {
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      if (history.length === 0) { alert('出力するデータがありません。'); return; }
+
+      let csvContent = "\uFEFFDAY,日時,クラス,セクション,対象ライダー,減点数,採点者\n";
+      history.forEach(item => {
+        csvContent += `"${item.day}","${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ihatov_scores_all_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function renderSummary() {
+      const container = document.getElementById('summary-content');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに総合順位が表示されます</p>';
+        return;
+      }
+
+      const summaryMap = {};
+      history.forEach(item => {
+        const key = item.rider;
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            rider: item.rider,
+            class: item.class || '未設定',
+            day1: 0,
+            day2: 0
+          };
+        }
+        if (item.day === 'DAY1') summaryMap[key].day1 += Number(item.score);
+        if (item.day === 'DAY2') summaryMap[key].day2 += Number(item.score);
+      });
+
+      const summaryList = Object.values(summaryMap).map(s => ({
+        ...s,
+        total: s.day1 + s.day2
+      })).sort((a, b) => a.total - b.total);
+
+      let tableHtml = `
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>ライダー</th>
+              <th>クラス</th>
+              <th>DAY1</th>
+              <th>DAY2</th>
+              <th>合計</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      summaryList.forEach(s => {
+        tableHtml += `
+          <tr>
+            <td><b>${s.rider}</b></td>
+            <td>${s.class}</td>
+            <td>${s.day1}点</td>
+            <td>${s.day2}点</td>
+            <td class="summary-score-total">${s.total}点</td>
+          </tr>
+        `;
+      });
+
+      tableHtml += '</tbody></table>';
+      container.innerHTML = tableHtml;
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const filtered = history.filter(item => item.day === currentDay);
+      
+      historyList.innerHTML = filtered.length === 0 
+        ? `<li style="color:#888; font-size:0.8rem;">${currentDay}の記録はまだありません</li>`
+        : filtered.map(item => {
+            const syncTag = item.synced 
+              ? '<span class="sync-badge synced">送信済</span>' 
+              : '<span class="sync-badge unsynced">未送信</span>';
+            return `
+              <li class="history-item">
+                <div class="history-detail">
+                  <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
+                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
+                </div>
+                <div>
+                  <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
+                  <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
+                </div>
+              </li>
+            `;
+          }).join('');
+    }
+
+    initDayUI();
+    renderClassUI();
+    renderRiderUI();
+    renderSectionUI();
+    initEvaluator();
+    renderSummary();
+    renderHistory();
+  </script>
+
+  <!-- ▼ サービスワーカー登録（オフライン対応用） -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered!', reg))
+          .catch(err => console.log('Service Worker error: ', err));
+      });
+    }
+  </script>
+</body>
+</html>
