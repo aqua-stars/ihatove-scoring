@@ -24,10 +24,8 @@
     .btn-action-add { background: none; border: 1px solid #38a169; color: #38a169; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-action-manage { background: none; border: 1px solid #718096; color: #718096; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
 
-    /* ヘッダー共通 */
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 
-    /* 選択肢ボタンエリア（横スクロール） */
     .scroll-buttons {
       display: flex;
       gap: 6px;
@@ -54,7 +52,6 @@
       border-color: #2b6cb0;
     }
 
-    /* 採点者固定エリア */
     .evaluator-fixed-box {
       background-color: #ebf8ff;
       border: 1px solid #bee3f8;
@@ -68,7 +65,6 @@
     .evaluator-info-text { font-size: 0.85rem; color: #2b6cb0; font-weight: bold; }
     .btn-change-evaluator { background: none; border: 1px solid #3182ce; color: #3182ce; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold; }
 
-    /* 採点ボタン群 */
     .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
     .btn-score { padding: 14px 0; font-size: 1.1rem; font-weight: bold; background-color: #e2e8f0; color: #1a202c; border: 2px solid #cbd5e0; border-radius: 8px; cursor: pointer; }
     .btn-score.active { background-color: #3182ce; color: white; border-color: #2b6cb0; }
@@ -80,7 +76,6 @@
     .submit-container { margin-top: 24px; }
     .btn-submit { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold; color: white; background-color: #3182ce; border: none; border-radius: 12px; cursor: pointer; }
 
-    /* 集計エリア */
     .summary-container { margin-top: 24px; padding-top: 16px; border-top: 2px dashed #cbd5e0; }
     .summary-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; color: #2d3748; }
     .summary-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
@@ -88,16 +83,20 @@
     .summary-table td { padding: 6px 4px; border-top: 1px solid #edf2f7; color: #2d3748; }
     .summary-score-total { font-weight: bold; color: #e53e3e; font-size: 0.9rem; }
 
-    /* 履歴エリア */
     .history-container { margin-top: 20px; padding-top: 16px; border-top: 2px dashed #e2e8f0; }
     .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .history-title { font-weight: bold; font-size: 0.95rem; }
-    .btn-export { background-color: #38a169; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+    .history-actions { display: flex; gap: 4px; }
+    .btn-sync { background-color: #3182ce; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-export { background-color: #38a169; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     
     .history-list { list-style: none; max-height: 200px; overflow-y: auto; }
     .history-item { background: #f7fafc; padding: 10px 12px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem; border: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
     .history-detail { display: flex; flex-direction: column; }
     .evaluator-tag { font-size: 0.75rem; color: #718096; }
+    .sync-badge { font-size: 0.7rem; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
+    .sync-badge.synced { background-color: #c6f6d5; color: #22543d; }
+    .sync-badge.unsynced { background-color: #feebc8; color: #744210; }
     .btn-delete { background: none; border: none; color: #e53e3e; font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
   </style>
 </head>
@@ -106,13 +105,11 @@
   <div class="app-container">
     <h1>IHATOVE SCORING</h1>
 
-    <!-- 競技日（DAY）切替タブ -->
     <div class="day-tabs">
       <button class="btn-day" id="btn-day1" onclick="switchDay('DAY1')">DAY 1</button>
       <button class="btn-day" id="btn-day2" onclick="switchDay('DAY2')">DAY 2</button>
     </div>
 
-    <!-- 1. クラス選択エリア -->
     <div class="form-group">
       <div class="section-header">
         <label>🏆 クラス選択</label>
@@ -125,13 +122,11 @@
       <input type="text" id="class-manual" placeholder="クラスを手入力する場合はこちら" style="display: none; margin-top: 6px;">
     </div>
 
-    <!-- 2. 採点者の固定表示エリア -->
     <div class="evaluator-fixed-box">
       <div class="evaluator-info-text" id="evaluator-display">👤 採点者: 未設定</div>
       <button class="btn-change-evaluator" onclick="setEvaluator()">選択・変更</button>
     </div>
 
-    <!-- 3. 対象ライダーの選択・管理エリア -->
     <div class="form-group">
       <div class="section-header">
         <label>🏍️ 対象Rider（タップで選択）</label>
@@ -144,13 +139,11 @@
       <input type="text" id="rider-manual" placeholder="ライダーを手入力する場合はこちら" style="display: none; margin-top: 6px;">
     </div>
 
-    <!-- 4. セクション選択（1 SEC 〜 20 SEC） -->
     <div class="form-group">
       <label>📍 セクション選択</label>
       <div class="scroll-buttons" id="section-button-list"></div>
     </div>
 
-    <!-- 5. 減点数選択エリア -->
     <div class="form-group">
       <label>📊 減点数選択</label>
       <div class="score-buttons">
@@ -170,23 +163,27 @@
       <button type="button" class="btn-submit" onclick="saveScore()">採点を保存する</button>
     </div>
 
-    <!-- 6. 総合点数（集計）エリア -->
     <div class="summary-container">
       <div class="summary-title">📈 2日間総合スタンディング (DAY1 + DAY2)</div>
       <div id="summary-content"></div>
     </div>
 
-    <!-- 7. 履歴エリア -->
     <div class="history-container">
       <div class="history-header">
         <span class="history-title">📱 保存された記録</span>
-        <button class="btn-export" onclick="exportToCSV()">📥 CSV出力</button>
+        <div class="history-actions">
+          <button class="btn-sync" onclick="syncToHQ()">☁️ 本部送信</button>
+          <button class="btn-export" onclick="exportToCSV()">📥 CSV</button>
+        </div>
       </div>
       <ul class="history-list" id="history-list"></ul>
     </div>
   </div>
 
   <script>
+    // 本部URL（固定埋め込み）
+    const HQ_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbynZxtBLYcyis05tWjy4f4fuiVsR7dcf2wlbcCXZAmP8JGdsuFt9tbO9-vMgl4pAu7o6g/exec";
+
     let currentDay = localStorage.getItem('selected_day') || 'DAY1';
     let selectedScore = null;
     let currentEvaluator = localStorage.getItem('fixed_evaluator') || '';
@@ -450,7 +447,8 @@
         rider: finalRider,
         section: sectionLabel,
         score: selectedScore,
-        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+        synced: false
       };
 
       let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
@@ -477,6 +475,44 @@
         localStorage.setItem('trial_scores_v2', JSON.stringify(history));
         renderSummary();
         renderHistory();
+      }
+    }
+
+    // 本部（Googleスプレッドシート）への一括送信機能（URL固定版）
+    async function syncToHQ() {
+      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const unsynced = history.filter(item => !item.synced);
+
+      if (unsynced.length === 0) {
+        alert('現在、本部へ送信待ちの新しい記録はありません。');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        alert('現在オフライン状態です。電波の良い場所で再度ボタンを押してください。');
+        return;
+      }
+
+      try {
+        alert(`${unsynced.length}件の記録を本部に送信しています...`);
+        
+        await fetch(HQ_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(unsynced)
+        });
+
+        history = history.map(item => {
+          item.synced = true;
+          return item;
+        });
+        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
+
+        renderHistory();
+        alert('本部への送信が完了しました！スプレッドシートを確認してください。');
+      } catch (error) {
+        alert('送信に失敗しました。電波状況を確認して再度お試しください。\nエラー: ' + error.message);
       }
     }
 
@@ -565,18 +601,23 @@
       
       historyList.innerHTML = filtered.length === 0 
         ? `<li style="color:#888; font-size:0.8rem;">${currentDay}の記録はまだありません</li>`
-        : filtered.map(item => `
-            <li class="history-item">
-              <div class="history-detail">
-                <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider}</span>
-                <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
-              </div>
-              <div>
-                <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
-                <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
-              </div>
-            </li>
-          `).join('');
+        : filtered.map(item => {
+            const syncTag = item.synced 
+              ? '<span class="sync-badge synced">送信済</span>' 
+              : '<span class="sync-badge unsynced">未送信</span>';
+            return `
+              <li class="history-item">
+                <div class="history-detail">
+                  <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
+                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
+                </div>
+                <div>
+                  <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
+                  <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
+                </div>
+              </li>
+            `;
+          }).join('');
     }
 
     initDayUI();
