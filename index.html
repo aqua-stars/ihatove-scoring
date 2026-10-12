@@ -131,8 +131,8 @@
     </div>
 
     <div class="evaluator-fixed-box">
-      <div class="evaluator-info-text" id="evaluator-display">👤 採点者: 未設定</div>
-      <button class="btn-change-evaluator" onclick="setEvaluator()">選択・変更</button>
+      <div class="evaluator-info-text" id="evaluator-display">👤 採点担当者: 未設定</div>
+      <button class="btn-change-evaluator" onclick="setEvaluator()">変更する</button>
     </div>
 
     <div class="form-group">
@@ -235,6 +235,7 @@
       try { return JSON.parse(saved); } catch (e) { return defaultRiders; }
     }
 
+    // 初回起動時や未設定時に必ずゼッケンと名前を入力させる強制ポップアップ
     function initEvaluator() {
       if (!currentEvaluator) {
         setEvaluator();
@@ -244,27 +245,18 @@
     }
 
     function setEvaluator() {
-      const members = getGroupMembers();
-      let message = 'スマホの持ち主（採点者）を選択・入力してください:\n\n';
-      members.forEach((m, idx) => message += `${idx + 1}: ${m}\n`);
-      message += '\n番号または直接名前を入力してください:';
-
-      const input = prompt(message, currentEvaluator);
-      if (input !== null && input.trim() !== '') {
-        const trimmed = input.trim();
-        const num = parseInt(trimmed, 10);
-        if (!isNaN(num) && num >= 1 && num <= members.length) {
-          currentEvaluator = members[num - 1];
-        } else {
-          currentEvaluator = trimmed;
-        }
-        localStorage.setItem('fixed_evaluator', currentEvaluator);
-        updateEvaluatorDisplay();
+      let input = prompt('【必須】あなたの「ゼッケンナンバーとお名前」を入力してください:\n(例: 101 田中太郎)', currentEvaluator);
+      while (!input || input.trim() === '') {
+        alert('採点者の設定は必須です。入力してください。');
+        input = prompt('【必須】あなたの「ゼッケンナンバーとお名前」を入力してください:\n(例: 101 田中太郎)');
       }
+      currentEvaluator = input.trim();
+      localStorage.setItem('fixed_evaluator', currentEvaluator);
+      updateEvaluatorDisplay();
     }
 
     function updateEvaluatorDisplay() {
-      document.getElementById('evaluator-display').textContent = `👤 採点者: ${currentEvaluator}`;
+      document.getElementById('evaluator-display').textContent = `👤 担当: ${currentEvaluator}`;
     }
 
     function renderClassUI() {
@@ -441,6 +433,15 @@
       if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
       if (selectedScore === null) { alert('減点数を選択してください！'); return; }
 
+      // ▼ スマホ内での重複チェック（同じ日・同じライダー・同じセクションがすでに保存されていないか確認）
+      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const isDuplicate = history.some(item => item.day === currentDay && item.rider === finalRider && item.section === sectionLabel);
+      
+      if (isDuplicate) {
+        const overwrite = confirm(`⚠️ 【警告】\n「${finalRider}」の「${sectionLabel} (${currentDay})」は、すでにこの端末に記録されています。\n\n重複して登録しますか？（キャンセルすると修正できます）`);
+        if (!overwrite) return;
+      }
+
       let registered = getGroupMembers();
       if (!registered.includes(finalRider) && finalRider !== '__MANUAL__') {
         registered.push(finalRider);
@@ -459,7 +460,6 @@
         synced: false
       };
 
-      let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       history.unshift(record);
       localStorage.setItem('trial_scores_v2', JSON.stringify(history));
 
@@ -501,7 +501,7 @@
       }
 
       try {
-        alert(`${unsynced.length}件の記録を本부에送信しています...`);
+        alert(`${unsynced.length}件の記録を本部に送信しています...`);
         
         await fetch(HQ_WEBHOOK_URL, {
           method: 'POST',
@@ -616,7 +616,7 @@
               <li class="history-item">
                 <div class="history-detail">
                   <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
-                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
+                  <span class="evaluator-tag">${item.day} / 担当: ${item.evaluator} (${item.time})</span>
                 </div>
                 <div>
                   <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
