@@ -350,6 +350,30 @@
       }
     }
 
+    // ライダーごとの次回セクション番号の取得・更新機能
+    function getRiderNextSection(riderName) {
+      if (!riderName) return 1;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections') || '{}');
+      return riderSections[riderName] || 1;
+    }
+
+    function updateRiderNextSection(riderName, currentSec) {
+      if (!riderName) return;
+      const riderSections = JSON.parse(localStorage.getItem('rider_next_sections') || '{}');
+      let nextSec = currentSec + 1;
+      if (nextSec > 20) nextSec = 1; // 20の次は1に戻る
+      riderSections[riderName] = nextSec;
+      localStorage.setItem('rider_next_sections', JSON.stringify(riderSections));
+      return nextSec;
+    }
+
+    // 選択中のライダーに合わせてセクション選択枠をセットする
+    function syncSectionForRider(riderName) {
+      const sectionSelect = document.getElementById('section-select');
+      const nextSec = getRiderNextSection(riderName);
+      sectionSelect.value = nextSec.toString();
+    }
+
     // ライダーUIの読み込み
     function loadRiders() {
       const registered = getGroupMembers();
@@ -373,6 +397,7 @@
       selectedRiderName = name;
       document.getElementById('rider-manual').style.display = 'none';
       renderRiderUI(getGroupMembers());
+      syncSectionForRider(name); // そのライダーの次回セクションに同期
     }
 
     function onRiderSelectChange() {
@@ -386,6 +411,7 @@
         manualInput.style.display = 'none';
         selectedRiderName = val;
         renderRiderUI(getGroupMembers());
+        syncSectionForRider(val); // そのライダーの次回セクションに同期
       }
     }
 
@@ -441,17 +467,6 @@
       document.getElementById('stop-btn').classList.remove('active');
     }
 
-    // 自動で次のセクションへ進む関数
-    function advanceNextSection() {
-      const sectionSelect = document.getElementById('section-select');
-      let currentVal = parseInt(sectionSelect.value, 10);
-      if (currentVal < 20) {
-        sectionSelect.value = (currentVal + 1).toString();
-      } else {
-        sectionSelect.value = "1"; // 20 SECの後は1 SECに戻る
-      }
-    }
-
     function saveScore() {
       const manualClassVal = document.getElementById('class-manual').value.trim();
       const finalClass = manualClassVal || selectedClassName;
@@ -459,7 +474,7 @@
       const manualVal = document.getElementById('rider-manual').value.trim();
       const finalRider = manualVal || selectedRiderName;
       const sectionSelect = document.getElementById('section-select');
-      const sectionNum = sectionSelect.value;
+      const sectionNum = parseInt(sectionSelect.value, 10);
       const sectionLabel = `${sectionNum} SEC`;
 
       if (!finalClass) {
@@ -505,8 +520,9 @@
       clearSelection();
       selectedScore = null;
       
-      // 自動で次のセクションへ進める
-      advanceNextSection();
+      // 保存したライダーの次回セクションを進める ＆ 表示に同期
+      updateRiderNextSection(finalRider, sectionNum);
+      syncSectionForRider(finalRider);
 
       renderRiderUI(registered);
       renderSummary();
