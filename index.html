@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>イーハトーブトライアル 採点アプリ</title>
+  <title>Ihatove Scoring App</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f4f6f8; display: flex; justify-content: center; padding: 16px; }
     .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h1 { font-size: 1.2rem; text-align: center; margin-bottom: 16px; color: #333; }
+    h1 { font-size: 1.3rem; text-align: center; margin-bottom: 16px; color: #1a202c; font-weight: 800; letter-spacing: 1px; }
     
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 0.9rem; font-weight: bold; margin-bottom: 6px; color: #555; }
@@ -98,7 +98,7 @@
 <body>
 
   <div class="app-container">
-    <h1>IHATOVE  SCORING</h1>
+    <h1>IHATOVE SCORING</h1>
 
     <!-- 1. クラス選択エリア（最上段） -->
     <div class="form-group">
@@ -442,208 +442,3 @@
           const removed = registered.splice(num - 1, 1);
           localStorage.setItem('registered_riders', JSON.stringify(registered));
           if (selectedRiderName === removed[0]) selectedRiderName = '';
-          loadRiders();
-          alert(`${removed[0]} を削除しました。`);
-        } else {
-          alert('無効な番号です。');
-        }
-      }
-    }
-
-    function selectScore(score, btn) {
-      clearSelection();
-      selectedScore = score;
-      btn.classList.add('active');
-    }
-
-    function selectStop(btn) {
-      clearSelection();
-      selectedScore = 3;
-      btn.classList.add('active');
-    }
-
-    function clearSelection() {
-      document.querySelectorAll('.btn-score').forEach(b => b.classList.remove('active'));
-      document.getElementById('stop-btn').classList.remove('active');
-    }
-
-    function saveScore() {
-      const manualClassVal = document.getElementById('class-manual').value.trim();
-      const finalClass = manualClassVal || selectedClassName;
-      
-      const manualVal = document.getElementById('rider-manual').value.trim();
-      const finalRider = manualVal || selectedRiderName;
-      const sectionSelect = document.getElementById('section-select');
-      const sectionNum = parseInt(sectionSelect.value, 10);
-      const sectionLabel = `${sectionNum} SEC`;
-
-      if (!finalClass) {
-        alert('クラスを選択または入力してください！');
-        return;
-      }
-      if (!currentEvaluator) {
-        alert('採点者が設定されていません。');
-        setEvaluator();
-        return;
-      }
-      if (!finalRider) {
-        alert('対象のRiderを選択または入力してください！');
-        return;
-      }
-      if (selectedScore === null) {
-        alert('減点数または「停止」を選択してください！');
-        return;
-      }
-
-      let registered = getGroupMembers();
-      if (!registered.includes(finalRider)) {
-        registered.push(finalRider);
-        localStorage.setItem('registered_riders', JSON.stringify(registered));
-      }
-
-      const record = {
-        id: Date.now(),
-        evaluator: currentEvaluator,
-        class: finalClass,
-        rider: finalRider,
-        section: sectionLabel,
-        score: selectedScore,
-        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-      history.unshift(record);
-      localStorage.setItem('trial_scores', JSON.stringify(history));
-
-      alert(`保存しました！\nクラス: ${finalClass}\n採点者: ${currentEvaluator}\nRider: ${finalRider}\n${sectionLabel} / 減点:${selectedScore}点`);
-
-      clearSelection();
-      selectedScore = null;
-      
-      // 保存したライダーの次回セクションを進める ＆ 表示に同期
-      updateRiderNextSection(finalRider, sectionNum);
-      syncSectionForRider(finalRider);
-
-      renderRiderUI(registered);
-      renderSummary();
-      renderHistory();
-    }
-
-    function deleteRecord(id) {
-      if (confirm('この記録を削除してもよろしいですか？')) {
-        let history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem('trial_scores', JSON.stringify(history));
-        renderSummary();
-        renderHistory();
-      }
-    }
-
-    function exportToCSV() {
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-      if (history.length === 0) {
-        alert('出力するデータがありません。');
-        return;
-      }
-
-      let csvContent = "\uFEFF日時,クラス,セクション,対象ライダー,減点数,採点者\n";
-      history.forEach(item => {
-        csvContent += `"${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `ihatov_scores_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    // 集計表示の描画（ライダー別合計減点）
-    function renderSummary() {
-      const container = document.getElementById('summary-content');
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-
-      if (history.length === 0) {
-        container.innerHTML = '<p style="color:#888; font-size:0.8rem;">記録が保存されるとここに合計が表示されます</p>';
-        return;
-      }
-
-      // ライダーごとに集計処理
-      const summaryMap = {};
-      history.forEach(item => {
-        const key = item.rider;
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            rider: item.rider,
-            class: item.class || '未設定',
-            totalScore: 0,
-            secCount: 0
-          };
-        }
-        summaryMap[key].totalScore += Number(item.score);
-        summaryMap[key].secCount += 1;
-      });
-
-      // 配列にして減点数が少ない順（優勢順）にソート
-      const summaryList = Object.values(summaryMap).sort((a, b) => a.totalScore - b.totalScore);
-
-      let tableHtml = `
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>ライダー</th>
-              <th>クラス</th>
-              <th>SEC数</th>
-              <th>合計減点</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      summaryList.forEach(s => {
-        tableHtml += `
-          <tr>
-            <td><b>${s.rider}</b></td>
-            <td>${s.class}</td>
-            <td>${s.secCount} SEC</td>
-            <td class="summary-score">${s.totalScore}点</td>
-          </tr>
-        `;
-      });
-
-      tableHtml += '</tbody></table>';
-      container.innerHTML = tableHtml;
-    }
-
-    function renderHistory() {
-      const historyList = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('trial_scores') || '[]');
-      
-      historyList.innerHTML = history.length === 0 
-        ? '<li style="color:#888; font-size:0.8rem;">まだ記録はありません</li>'
-        : history.map(item => `
-            <li class="history-item">
-              <div class="history-detail">
-                <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider}</span>
-                <span class="evaluator-tag">採点者: ${item.evaluator} (${item.time})</span>
-              </div>
-              <div>
-                <span style="color:#e53e3e; font-weight:bold; margin-right:8px;">減点 ${item.score}</span>
-                <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
-              </div>
-            </li>
-          `).join('');
-    }
-
-    loadClasses();
-    loadRiders();
-    initEvaluator();
-    renderSummary();
-    renderHistory();
-  </script>
-
-</body>
-</html>
