@@ -81,7 +81,14 @@
     .btn-submit { width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; color: white; background-color: #16a34a; border: none; border-radius: 8px; cursor: pointer; }
 
     .summary-container { margin-top: 18px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
-    .summary-title { font-weight: bold; font-size: 0.85rem; margin-bottom: 6px; color: #334155; }
+    .summary-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .summary-title { font-weight: bold; font-size: 0.85rem; color: #334155; }
+    
+    /* スタンディング用タブ */
+    .summary-tabs { display: flex; gap: 4px; background: #f1f5f9; padding: 2px; border-radius: 6px; }
+    .btn-sum-tab { padding: 4px 10px; border: none; background: none; font-size: 0.75rem; font-weight: bold; color: #64748b; border-radius: 4px; cursor: pointer; }
+    .btn-sum-tab.active { background-color: #334155; color: white; }
+
     .summary-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
     .summary-table th { background-color: #f1f5f9; color: #475569; padding: 5px 4px; text-align: left; font-size: 0.7rem; }
     .summary-table td { padding: 5px 4px; border-top: 1px solid #f1f5f9; color: #1e293b; }
@@ -170,8 +177,16 @@
       <button type="button" class="btn-submit" onclick="saveScore()">採点を保存する</button>
     </div>
 
+    <!-- 総合スタンディング（タブ切替仕様） -->
     <div class="summary-container">
-      <div class="summary-title">📈 2日間総合スタンディング</div>
+      <div class="summary-header-row">
+        <span class="summary-title">📈 スタンディング</span>
+        <div class="summary-tabs">
+          <button class="btn-sum-tab" id="btn-sum-day1" onclick="switchSummaryTab('DAY1')">DAY1</button>
+          <button class="btn-sum-tab" id="btn-sum-day2" onclick="switchSummaryTab('DAY2')">DAY2</button>
+          <button class="btn-sum-tab" id="btn-sum-total" onclick="switchSummaryTab('TOTAL')">総合</button>
+        </div>
+      </div>
       <div id="summary-content"></div>
     </div>
 
@@ -191,6 +206,7 @@
     const HQ_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbynZxtBLYcyis05tWjy4f4fuiVsR7dcf2wlbcCXZAmP8JGdsuFt9tbO9-vMgl4pAu7o6g/exec";
 
     let currentDay = localStorage.getItem('selected_day') || 'DAY1';
+    let currentSummaryTab = localStorage.getItem('summary_tab') || 'TOTAL';
     let selectedScore = null;
     let currentEvaluator = localStorage.getItem('fixed_evaluator') || '';
     let selectedClassName = localStorage.getItem('fixed_class') || '';
@@ -213,6 +229,12 @@
         syncSectionForRider(selectedRiderName);
       }
       renderHistory();
+    }
+
+    function switchSummaryTab(tab) {
+      currentSummaryTab = tab;
+      localStorage.setItem('summary_tab', tab);
+      renderSummary();
     }
 
     function getClasses() {
@@ -445,7 +467,6 @@
       if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
       if (selectedScore === null) { alert('減点数を選択してください！'); return; }
 
-      // 確定したクラスを保存
       if (selectedClassName === '__MANUAL__') {
         selectedClassName = finalClass;
         localStorage.setItem('fixed_class', selectedClassName);
@@ -507,162 +528,3 @@
     async function syncToHQ() {
       let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       const unsynced = history.filter(item => !item.synced);
-
-      if (unsynced.length === 0) {
-        alert('送信待ちの新しい記録はありません。');
-        return;
-      }
-
-      if (!navigator.onLine) {
-        alert('現在オフライン状態です。電波の良い場所で再度ボタンを押してください。');
-        return;
-      }
-
-      try {
-        alert(`${unsynced.length}件の記録を本部に送信しています...`);
-        
-        await fetch(HQ_WEBHOOK_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsynced)
-        });
-
-        history = history.map(item => {
-          item.synced = true;
-          return item;
-        });
-        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
-
-        renderHistory();
-        alert('本部への送信が完了しました！');
-      } catch (error) {
-        alert('送信に失敗しました。エラー: ' + error.message);
-      }
-    }
-
-    function exportToCSV() {
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-      if (history.length === 0) { alert('出力するデータがありません。'); return; }
-
-      let csvContent = "\uFEFFDAY,日時,クラス,セクション,対象ライダー,減点数,採点者\n";
-      history.forEach(item => {
-        csvContent += `"${item.day}","${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `ihatov_scores_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function renderSummary() {
-      const container = document.getElementById('summary-content');
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-
-      if (history.length === 0) {
-        container.innerHTML = '<p style="color:#888; font-size:0.75rem;">記録が保存されるとここに総合順位が表示されます</p>';
-        return;
-      }
-
-      const summaryMap = {};
-      history.forEach(item => {
-        const key = item.rider;
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            rider: item.rider,
-            class: item.class || '未設定',
-            day1: 0,
-            day2: 0
-          };
-        }
-        if (item.day === 'DAY1') summaryMap[key].day1 += Number(item.score);
-        if (item.day === 'DAY2') summaryMap[key].day2 += Number(item.score);
-      });
-
-      const summaryList = Object.values(summaryMap).map(s => ({
-        ...s,
-        total: s.day1 + s.day2
-      })).sort((a, b) => a.total - b.total);
-
-      let tableHtml = `
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>ライダー</th>
-              <th>クラス</th>
-              <th>DAY1</th>
-              <th>DAY2</th>
-              <th>合計</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      summaryList.forEach(s => {
-        tableHtml += `
-          <tr>
-            <td><b>${s.rider}</b></td>
-            <td>${s.class}</td>
-            <td>${s.day1}点</td>
-            <td>${s.day2}点</td>
-            <td class="summary-score-total">${s.total}点</td>
-          </tr>
-        `;
-      });
-
-      tableHtml += '</tbody></table>';
-      container.innerHTML = tableHtml;
-    }
-
-    function renderHistory() {
-      const historyList = document.getElementById('history-list');
-      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
-      const filtered = history.filter(item => item.day === currentDay);
-      
-      historyList.innerHTML = filtered.length === 0 
-        ? `<li style="color:#888; font-size:0.75rem;">${currentDay}の記録はまだありません</li>`
-        : filtered.map(item => {
-            const syncTag = item.synced 
-              ? '<span class="sync-badge synced">送信済</span>' 
-              : '<span class="sync-badge unsynced">未送信</span>';
-            return `
-              <li class="history-item">
-                <div class="history-detail">
-                  <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
-                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
-                </div>
-                <div>
-                  <span style="color:#dc2626; font-weight:bold; margin-right:6px;">減点 ${item.score}</span>
-                  <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
-                </div>
-              </li>
-            `;
-          }).join('');
-    }
-
-    initDayUI();
-    initClassUI();
-    renderRiderUI();
-    renderSectionUI();
-    initEvaluator();
-    renderSummary();
-    renderHistory();
-  </script>
-
-  <!-- ▼ サービスワーカー登録（オフライン対応用） -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registered!', reg))
-          .catch(err => console.log('Service Worker error: ', err));
-      });
-    }
-  </script>
-</body>
-</html>
