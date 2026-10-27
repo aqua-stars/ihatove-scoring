@@ -528,3 +528,194 @@
     async function syncToHQ() {
       let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       const unsynced = history.filter(item => !item.synced);
+
+      if (unsynced.length === 0) {
+        alert('送信待ちの新しい記録はありません。');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        alert('現在オフライン状態です。電波の良い場所で再度ボタンを押してください。');
+        return;
+      }
+
+      try {
+        alert(`${unsynced.length}件の記録を本部に送信しています...`);
+        
+        await fetch(HQ_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(unsynced)
+        });
+
+        history = history.map(item => {
+          item.synced = true;
+          return item;
+        });
+        localStorage.setItem('trial_scores_v2', JSON.stringify(history));
+
+        renderHistory();
+        alert('本部への送信が完了しました！');
+      } catch (error) {
+        alert('送信に失敗しました。エラー: ' + error.message);
+      }
+    }
+
+    function exportToCSV() {
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      if (history.length === 0) { alert('出力するデータがありません。'); return; }
+
+      let csvContent = "\uFEFFDAY,日時,クラス,セクション,対象ライダー,減点数,採点者\n";
+      history.forEach(item => {
+        csvContent += `"${item.day}","${item.time}","${item.class || '未設定'}","${item.section}","${item.rider}","${item.score}","${item.evaluator}"\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `ihatov_scores_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function renderSummary() {
+      // タブのアクティブ状態を更新
+      document.getElementById('btn-sum-day1').classList.toggle('active', currentSummaryTab === 'DAY1');
+      document.getElementById('btn-sum-day2').classList.toggle('active', currentSummaryTab === 'DAY2');
+      document.getElementById('btn-sum-total').classList.toggle('active', currentSummaryTab === 'TOTAL');
+
+      const container = document.getElementById('summary-content');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color:#888; font-size:0.75rem; padding:6px 0;">記録が保存されるとここに順位が表示されます</p>';
+        return;
+      }
+
+      const summaryMap = {};
+      history.forEach(item => {
+        const key = item.rider;
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            rider: item.rider,
+            class: item.class || '未設定',
+            day1: 0,
+            day2: 0
+          };
+        }
+        if (item.day === 'DAY1') summaryMap[key].day1 += Number(item.score);
+        if (item.day === 'DAY2') summaryMap[key].day2 += Number(item.score);
+      });
+
+      let summaryList = Object.values(summaryMap).map(s => ({
+        ...s,
+        total: s.day1 + s.day2
+      }));
+
+      // 選択中のタブに応じてソートと表示を切替
+      if (currentSummaryTab === 'DAY1') {
+        summaryList.sort((a, b) => a.day1 - b.day1);
+      } else if (currentSummaryTab === 'DAY2') {
+        summaryList.sort((a, b) => a.day2 - b.day2);
+      } else {
+        summaryList.sort((a, b) => a.total - b.total);
+      }
+
+      let tableHtml = `
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>ライダー</th>
+              <th>クラス</th>
+              ${currentSummaryTab === 'DAY1' ? '<th>DAY1</th>' : ''}
+              ${currentSummaryTab === 'DAY2' ? '<th>DAY2</th>' : ''}
+              ${currentSummaryTab === 'TOTAL' ? '<th>DAY1</th><th>DAY2</th><th>合計</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      summaryList.forEach(s => {
+        if (currentSummaryTab === 'DAY1') {
+          tableHtml += `
+            <tr>
+              <td><b>${s.rider}</b></td>
+              <td>${s.class}</td>
+              <td class="summary-score-total">${s.day1}点</td>
+            </tr>
+          `;
+        } else if (currentSummaryTab === 'DAY2') {
+          tableHtml += `
+            <tr>
+              <td><b>${s.rider}</b></td>
+              <td>${s.class}</td>
+              <td class="summary-score-total">${s.day2}点</td>
+            </tr>
+          `;
+        } else {
+          tableHtml += `
+            <tr>
+              <td><b>${s.rider}</b></td>
+              <td>${s.class}</td>
+              <td>${s.day1}点</td>
+              <td>${s.day2}点</td>
+              <td class="summary-score-total">${s.total}点</td>
+            </tr>
+          `;
+        }
+      });
+
+      tableHtml += '</tbody></table>';
+      container.innerHTML = tableHtml;
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
+      const filtered = history.filter(item => item.day === currentDay);
+      
+      historyList.innerHTML = filtered.length === 0 
+        ? `<li style="color:#888; font-size:0.75rem;">${currentDay}の記録はまだありません</li>`
+        : filtered.map(item => {
+            const syncTag = item.synced 
+              ? '<span class="sync-badge synced">送信済</span>' 
+              : '<span class="sync-badge unsynced">未送信</span>';
+            return `
+              <li class="history-item">
+                <div class="history-detail">
+                  <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
+                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
+                </div>
+                <div>
+                  <span style="color:#dc2626; font-weight:bold; margin-right:6px;">減点 ${item.score}</span>
+                  <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
+                </div>
+              </li>
+            `;
+          }).join('');
+    }
+
+    initDayUI();
+    initClassUI();
+    renderRiderUI();
+    renderSectionUI();
+    initEvaluator();
+    renderSummary();
+    renderHistory();
+  </script>
+
+  <!-- ▼ サービスワーカー登録（オフライン対応用） -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registered!', reg))
+          .catch(err => console.log('Service Worker error: ', err));
+      });
+    }
+  </script>
+</body>
+</html>
