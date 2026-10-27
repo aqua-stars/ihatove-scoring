@@ -60,7 +60,7 @@
       border-color: #2563eb;
     }
 
-    .evaluator-fixed-box {
+    .info-fixed-box {
       background-color: #eff6ff;
       border: 1px solid #dbeafe;
       padding: 8px 10px;
@@ -70,8 +70,8 @@
       justify-content: space-between;
       align-items: center;
     }
-    .evaluator-info-text { font-size: 0.8rem; color: #1d4ed8; font-weight: bold; }
-    .btn-change-evaluator { background: none; border: 1px solid #2563eb; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+    .info-text { font-size: 0.8rem; color: #1d4ed8; font-weight: bold; }
+    .btn-change { background: none; border: 1px solid #2563eb; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
 
     .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
     .btn-score { padding: 14px 0; font-size: 1.2rem; font-weight: bold; background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; }
@@ -114,7 +114,13 @@
       <button class="btn-day" id="btn-day2" onclick="switchDay('DAY2')">DAY 2</button>
     </div>
 
-    <div class="form-group">
+    <!-- クラス選択（固定表示＆変更可能） -->
+    <div class="info-fixed-box" id="class-fixed-container" style="display: none;">
+      <div class="info-text" id="class-display">🏆 クラス: 未選択</div>
+      <button class="btn-change" onclick="changeClass()">変更</button>
+    </div>
+
+    <div class="form-group" id="class-selection-group">
       <div class="section-header">
         <label>🏆 クラス選択</label>
         <div class="action-buttons">
@@ -126,9 +132,10 @@
       <input type="text" id="class-manual" placeholder="クラスを手入力" style="display: none; margin-top: 4px;">
     </div>
 
-    <div class="evaluator-fixed-box">
-      <div class="evaluator-info-text" id="evaluator-display">👤 担当: 未設定</div>
-      <button class="btn-change-evaluator" onclick="setEvaluator()">変更</button>
+    <!-- 採点者表示 -->
+    <div class="info-fixed-box">
+      <div class="info-text" id="evaluator-display">👤 採点者: 未設定</div>
+      <button class="btn-change" onclick="setEvaluator()">変更</button>
     </div>
 
     <div class="form-group">
@@ -186,8 +193,8 @@
     let currentDay = localStorage.getItem('selected_day') || 'DAY1';
     let selectedScore = null;
     let currentEvaluator = localStorage.getItem('fixed_evaluator') || '';
+    let selectedClassName = localStorage.getItem('fixed_class') || '';
     let selectedRiderName = '';
-    let selectedClassName = '';
     let selectedSectionNum = 1;
 
     const defaultClasses = ['クラシック', 'ヒームカ', 'ネリ', 'ブドリ', 'トレールトライアル', 'ランド'];
@@ -246,10 +253,28 @@
     }
 
     function updateEvaluatorDisplay() {
-      document.getElementById('evaluator-display').textContent = `👤 担当: ${currentEvaluator}`;
+      document.getElementById('evaluator-display').textContent = `👤 採点者: ${currentEvaluator}`;
     }
 
-    function renderClassUI() {
+    function initClassUI() {
+      if (selectedClassName) {
+        document.getElementById('class-selection-group').style.display = 'none';
+        document.getElementById('class-fixed-container').style.display = 'flex';
+        document.getElementById('class-display').textContent = `🏆 クラス: ${selectedClassName}`;
+      } else {
+        document.getElementById('class-selection-group').style.display = 'block';
+        document.getElementById('class-fixed-container').style.display = 'none';
+        renderClassList();
+      }
+    }
+
+    function changeClass() {
+      document.getElementById('class-fixed-container').style.display = 'none';
+      document.getElementById('class-selection-group').style.display = 'block';
+      renderClassList();
+    }
+
+    function renderClassList() {
       const classes = getClasses();
       const container = document.getElementById('class-button-list');
       let html = classes.map(c => `
@@ -265,11 +290,12 @@
         selectedClassName = '__MANUAL__';
         manualInput.style.display = 'block';
         manualInput.value = '';
+        renderClassList();
       } else {
         selectedClassName = c;
-        manualInput.style.display = 'none';
+        localStorage.setItem('fixed_class', selectedClassName);
+        initClassUI();
       }
-      renderClassUI();
     }
 
     function registerNewClass() {
@@ -297,8 +323,11 @@
         if (!isNaN(num) && num >= 1 && num <= classes.length) {
           const removed = classes.splice(num - 1, 1);
           localStorage.setItem('registered_classes', JSON.stringify(classes));
-          if (selectedClassName === removed[0]) selectedClassName = '';
-          renderClassUI();
+          if (selectedClassName === removed[0]) {
+            selectedClassName = '';
+            localStorage.removeItem('fixed_class');
+          }
+          initClassUI();
           alert(`${removed[0]} クラスを削除しました。`);
         }
       }
@@ -415,6 +444,13 @@
       if (!currentEvaluator) { alert('採点者が設定されていません。'); setEvaluator(); return; }
       if (!finalRider) { alert('対象ライダーを選択してください！'); return; }
       if (selectedScore === null) { alert('減点数を選択してください！'); return; }
+
+      // 確定したクラスを保存
+      if (selectedClassName === '__MANUAL__') {
+        selectedClassName = finalClass;
+        localStorage.setItem('fixed_class', selectedClassName);
+        initClassUI();
+      }
 
       let history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
       const isDuplicate = history.some(item => item.day === currentDay && item.rider === finalRider && item.section === sectionLabel);
@@ -598,7 +634,7 @@
               <li class="history-item">
                 <div class="history-detail">
                   <span><b>[${item.class || '未設定'}] ${item.section}</b>: ${item.rider} ${syncTag}</span>
-                  <span class="evaluator-tag">${item.day} / 担当: ${item.evaluator} (${item.time})</span>
+                  <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
                 </div>
                 <div>
                   <span style="color:#dc2626; font-weight:bold; margin-right:6px;">減点 ${item.score}</span>
@@ -610,7 +646,7 @@
     }
 
     initDayUI();
-    renderClassUI();
+    initClassUI();
     renderRiderUI();
     renderSectionUI();
     initEvaluator();
