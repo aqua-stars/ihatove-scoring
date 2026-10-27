@@ -7,32 +7,32 @@
   
   <!-- ▼ PWA & ホーム画面用の設定 -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2b6cb0">
+  <meta name="theme-color" content="#ff6b6b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="IHATOVE">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f8fafc; display: flex; justify-content: center; padding: 12px; }
-    .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    h1 { font-size: 1.2rem; text-align: center; margin-bottom: 12px; color: #1e293b; font-weight: 800; letter-spacing: 0.5px; }
+    body { background-color: #fff5f5; display: flex; justify-content: center; padding: 12px; }
+    .app-container { background-color: #ffffff; width: 100%; max-width: 420px; padding: 16px; border-radius: 16px; box-shadow: 0 4px 16px rgba(255,107,107,0.15); border: 2px solid #ffe3e3; }
+    h1 { font-size: 1.3rem; text-align: center; margin-bottom: 12px; color: #ff6b6b; font-weight: 900; letter-spacing: 1px; text-shadow: 1px 1px 0px #ffe3e3; }
 
     /* DAY切替タブ */
-    .day-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: #f1f5f9; padding: 3px; border-radius: 8px; }
-    .btn-day { flex: 1; padding: 8px 0; border: none; background: none; font-size: 0.9rem; font-weight: bold; color: #64748b; border-radius: 6px; cursor: pointer; }
-    .btn-day.active { background-color: #2563eb; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .day-tabs { display: flex; gap: 8px; margin-bottom: 14px; background: #fff0f0; padding: 4px; border-radius: 12px; }
+    .btn-day { flex: 1; padding: 10px 0; border: none; background: none; font-size: 0.95rem; font-weight: 900; color: #a0aec0; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .btn-day.active { background-color: #ff6b6b; color: white; box-shadow: 0 2px 6px rgba(255,107,107,0.4); }
     
-    .form-group { margin-bottom: 14px; }
-    label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px; color: #475569; }
-    input[type="text"] { width: 100%; padding: 10px; font-size: 0.95rem; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #fff; }
+    .card-box { background: #fafafa; border: 1px solid #edf2f7; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+    label { display: block; font-size: 0.85rem; font-weight: 900; margin-bottom: 6px; color: #4a5568; }
+    input[type="text"] { width: 100%; padding: 10px; font-size: 0.95rem; border: 2px solid #e2e8f0; border-radius: 8px; background-color: #fff; }
 
     /* アクションボタン群 */
     .action-buttons { display: flex; gap: 4px; }
-    .btn-action-add { background: none; border: 1px solid #16a34a; color: #16a34a; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-    .btn-action-manage { background: none; border: 1px solid #64748b; color: #64748b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+    .btn-action-add { background: #e6fffa; border: 1px solid #319795; color: #319795; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; cursor: pointer; }
+    .btn-action-manage { background: #edf2f7; border: 1px solid #718096; color: #718096; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; cursor: pointer; }
 
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 
     .scroll-buttons {
       display: flex;
@@ -43,82 +43,85 @@
       -webkit-overflow-scrolling: touch;
     }
     .btn-select-chip {
-      background-color: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      padding: 6px 10px;
-      border-radius: 16px;
-      font-size: 0.8rem;
+      background-color: #ffffff;
+      border: 2px solid #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
       white-space: nowrap;
       cursor: pointer;
-      font-weight: bold;
-      color: #334155;
+      font-weight: 900;
+      color: #4a5568;
       flex-shrink: 0;
+      transition: all 0.1s;
     }
     .btn-select-chip.active {
-      background-color: #2563eb;
+      background-color: #ff6b6b;
       color: white;
-      border-color: #2563eb;
+      border-color: #ff6b6b;
+      box-shadow: 0 2px 4px rgba(255,107,107,0.3);
     }
 
     .info-fixed-box {
-      background-color: #eff6ff;
-      border: 1px solid #dbeafe;
-      padding: 8px 10px;
-      border-radius: 8px;
-      margin-bottom: 14px;
+      background-color: #ebf8ff;
+      border: 2px solid #bee3f8;
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .info-text { font-size: 0.8rem; color: #1d4ed8; font-weight: bold; }
-    .btn-change { background: none; border: 1px solid #2563eb; color: #2563eb; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+    .info-text { font-size: 0.85rem; color: #3182ce; font-weight: 900; }
+    .btn-change { background: #ffffff; border: 2px solid #3182ce; color: #3182ce; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 900; }
 
     .score-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 6px; }
-    .btn-score { padding: 14px 0; font-size: 1.2rem; font-weight: bold; background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; }
-    .btn-score.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+    .btn-score { padding: 14px 0; font-size: 1.25rem; font-weight: 900; background-color: #ffffff; color: #2d3748; border: 2px solid #cbd5e0; border-radius: 10px; cursor: pointer; transition: all 0.1s; }
+    .btn-score.active { background-color: #ff6b6b; color: white; border-color: #ff6b6b; box-shadow: 0 3px 6px rgba(255,107,107,0.4); transform: scale(1.05); }
     
     .submit-container { margin-top: 16px; }
-    .btn-submit { width: 100%; padding: 14px; font-size: 1rem; font-weight: bold; color: white; background-color: #16a34a; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-submit { width: 100%; padding: 16px; font-size: 1.1rem; font-weight: 900; color: white; background-color: #48bb78; border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(72,187,120,0.3); cursor: pointer; }
+    .btn-submit:active { transform: scale(0.98); }
 
-    .summary-container { margin-top: 18px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .summary-container { margin-top: 16px; padding-top: 12px; border-top: 2px dashed #e2e8f0; }
     .summary-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .summary-title { font-weight: bold; font-size: 0.85rem; color: #334155; }
+    .summary-title { font-weight: 900; font-size: 0.9rem; color: #2d3748; }
     
     /* スタンディング用タブ */
-    .summary-tabs { display: flex; gap: 4px; background: #f1f5f9; padding: 2px; border-radius: 6px; }
-    .btn-sum-tab { padding: 4px 10px; border: none; background: none; font-size: 0.75rem; font-weight: bold; color: #64748b; border-radius: 4px; cursor: pointer; }
-    .btn-sum-tab.active { background-color: #334155; color: white; }
+    .summary-tabs { display: flex; gap: 4px; background: #edf2f7; padding: 3px; border-radius: 8px; }
+    .btn-sum-tab { padding: 4px 10px; border: none; background: none; font-size: 0.75rem; font-weight: 900; color: #718096; border-radius: 6px; cursor: pointer; }
+    .btn-sum-tab.active { background-color: #4a5568; color: white; }
 
-    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: #fff; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .summary-table th { background-color: #f1f5f9; color: #475569; padding: 5px 4px; text-align: left; font-size: 0.7rem; }
-    .summary-table td { padding: 5px 4px; border-top: 1px solid #f1f5f9; color: #1e293b; }
-    .summary-score-total { font-weight: bold; color: #dc2626; font-size: 0.85rem; }
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .summary-table th { background-color: #edf2f7; color: #4a5568; padding: 6px 4px; text-align: left; font-size: 0.75rem; font-weight: 900; }
+    .summary-table td { padding: 6px 4px; border-top: 1px solid #edf2f7; color: #2d3748; font-weight: 700; }
+    .summary-score-total { font-weight: 900; color: #ff6b6b; font-size: 0.9rem; }
 
-    .history-container { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .history-container { margin-top: 16px; padding-top: 12px; border-top: 2px dashed #e2e8f0; }
     .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .history-title { font-weight: bold; font-size: 0.85rem; }
+    .history-title { font-weight: 900; font-size: 0.9rem; color: #2d3748; }
     .history-actions { display: flex; gap: 4px; }
-    .btn-sync { background-color: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-    .btn-export { background-color: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+    .btn-sync { background-color: #3182ce; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; cursor: pointer; }
+    .btn-export { background-color: #38a169; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; cursor: pointer; }
     
-    .history-list { list-style: none; max-height: 160px; overflow-y: auto; }
-    .history-item { background: #f8fafc; padding: 8px 10px; border-radius: 6px; margin-bottom: 4px; font-size: 0.8rem; border: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+    .history-list { list-style: none; max-height: 150px; overflow-y: auto; }
+    .history-item { background: #fff; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; font-size: 0.8rem; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
     .history-detail { display: flex; flex-direction: column; }
-    .evaluator-tag { font-size: 0.7rem; color: #64748b; }
-    .sync-badge { font-size: 0.65rem; padding: 1px 3px; border-radius: 3px; font-weight: bold; margin-left: 4px; }
-    .sync-badge.synced { background-color: #dcfce7; color: #166534; }
-    .sync-badge.unsynced { background-color: #fef9c3; color: #854d0e; }
-    .btn-delete { background: none; border: none; color: #dc2626; font-size: 1rem; cursor: pointer; padding: 0 4px; }
+    .evaluator-tag { font-size: 0.7rem; color: #a0aec0; font-weight: 700; }
+    .sync-badge { font-size: 0.65rem; padding: 1px 4px; border-radius: 4px; font-weight: 900; margin-left: 4px; }
+    .sync-badge.synced { background-color: #c6f6d5; color: #22543d; }
+    .sync-badge.unsynced { background-color: #feebc8; color: #744210; }
+    .btn-delete { background: none; border: none; color: #e53e3e; font-size: 1.1rem; cursor: pointer; padding: 0 4px; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <h1>IHATOVE SCORING</h1>
+    <h1>🏁 IHATOVE SCORING</h1>
 
     <div class="day-tabs">
-      <button class="btn-day" id="btn-day1" onclick="switchDay('DAY1')">DAY 1</button>
-      <button class="btn-day" id="btn-day2" onclick="switchDay('DAY2')">DAY 2</button>
+      <button class="btn-day" id="btn-day1" onclick="switchDay('DAY1')">✨ DAY 1</button>
+      <button class="btn-day" id="btn-day2" onclick="switchDay('DAY2')">🚀 DAY 2</button>
     </div>
 
     <!-- クラス選択（固定表示＆変更可能） -->
@@ -127,7 +130,7 @@
       <button class="btn-change" onclick="changeClass()">変更</button>
     </div>
 
-    <div class="form-group" id="class-selection-group">
+    <div class="card-box" id="class-selection-group">
       <div class="section-header">
         <label>🏆 クラス選択</label>
         <div class="action-buttons">
@@ -136,7 +139,7 @@
         </div>
       </div>
       <div class="scroll-buttons" id="class-button-list"></div>
-      <input type="text" id="class-manual" placeholder="クラスを手入力" style="display: none; margin-top: 4px;">
+      <input type="text" id="class-manual" placeholder="クラスを手入力" style="display: none; margin-top: 6px;">
     </div>
 
     <!-- 採点者表示 -->
@@ -145,7 +148,7 @@
       <button class="btn-change" onclick="setEvaluator()">変更</button>
     </div>
 
-    <div class="form-group">
+    <div class="card-box">
       <div class="section-header">
         <label>🏍️ 対象Rider</label>
         <div class="action-buttons">
@@ -154,15 +157,15 @@
         </div>
       </div>
       <div class="scroll-buttons" id="quick-rider-list"></div>
-      <input type="text" id="rider-manual" placeholder="ライダーを手入力" style="display: none; margin-top: 4px;">
+      <input type="text" id="rider-manual" placeholder="ライダーを手入力" style="display: none; margin-top: 6px;">
     </div>
 
-    <div class="form-group">
+    <div class="card-box">
       <label>📍 セクション選択</label>
       <div class="scroll-buttons" id="section-button-list"></div>
     </div>
 
-    <div class="form-group">
+    <div class="card-box">
       <label>📊 減点数選択</label>
       <div class="score-buttons">
         <button type="button" class="btn-score" onclick="selectScore(0, this)">0</button>
@@ -174,7 +177,7 @@
     </div>
 
     <div class="submit-container">
-      <button type="button" class="btn-submit" onclick="saveScore()">採点を保存する</button>
+      <button type="button" class="btn-submit" onclick="saveScore()">✨ 採点を保存する</button>
     </div>
 
     <!-- 総合スタンディング（タブ切替仕様） -->
@@ -194,7 +197,7 @@
       <div class="history-header">
         <span class="history-title">📱 保存された記録</span>
         <div class="history-actions">
-          <button class="btn-sync" onclick="syncToHQ()">☁️ 本部送信</button>
+          <button class="btn-sync" onclick="syncToHQ()">☁️ 送信</button>
           <button class="btn-export" onclick="exportToCSV()">📥 CSV</button>
         </div>
       </div>
@@ -582,7 +585,6 @@
     }
 
     function renderSummary() {
-      // タブのアクティブ状態を更新
       document.getElementById('btn-sum-day1').classList.toggle('active', currentSummaryTab === 'DAY1');
       document.getElementById('btn-sum-day2').classList.toggle('active', currentSummaryTab === 'DAY2');
       document.getElementById('btn-sum-total').classList.toggle('active', currentSummaryTab === 'TOTAL');
@@ -591,7 +593,7 @@
       const history = JSON.parse(localStorage.getItem('trial_scores_v2') || '[]');
 
       if (history.length === 0) {
-        container.innerHTML = '<p style="color:#888; font-size:0.75rem; padding:6px 0;">記録が保存されるとここに順位が表示されます</p>';
+        container.innerHTML = '<p style="color:#a0aec0; font-size:0.75rem; padding:6px 0;">記録が保存されるとここに順位が表示されます</p>';
         return;
       }
 
@@ -615,7 +617,6 @@
         total: s.day1 + s.day2
       }));
 
-      // 選択中のタブに応じてソートと表示を切替
       if (currentSummaryTab === 'DAY1') {
         summaryList.sort((a, b) => a.day1 - b.day1);
       } else if (currentSummaryTab === 'DAY2') {
@@ -678,7 +679,7 @@
       const filtered = history.filter(item => item.day === currentDay);
       
       historyList.innerHTML = filtered.length === 0 
-        ? `<li style="color:#888; font-size:0.75rem;">${currentDay}の記録はまだありません</li>`
+        ? `<li style="color:#a0aec0; font-size:0.75rem;">${currentDay}の記録はまだありません</li>`
         : filtered.map(item => {
             const syncTag = item.synced 
               ? '<span class="sync-badge synced">送信済</span>' 
@@ -690,7 +691,7 @@
                   <span class="evaluator-tag">${item.day} / 採点者: ${item.evaluator} (${item.time})</span>
                 </div>
                 <div>
-                  <span style="color:#dc2626; font-weight:bold; margin-right:6px;">減点 ${item.score}</span>
+                  <span style="color:#ff6b6b; font-weight:900; margin-right:6px;">減点 ${item.score}</span>
                   <button class="btn-delete" onclick="deleteRecord(${item.id})">🗑️</button>
                 </div>
               </li>
